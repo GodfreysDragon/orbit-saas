@@ -1,0 +1,151 @@
+# SaaS Boilerplate — Laravel + Vue, multi-tenant
+
+A production-shaped starting point for B2B SaaS apps: **organizations** (multi-tenancy),
+**role-based permissions** (Spatie, scoped per organization), **Stripe subscription billing**
+(Laravel Cashier, billed per organization) and a polished **Inertia + Vue 3** dashboard.
+
+Built on the official Laravel 13 Vue starter kit (Fortify auth with 2FA and passkeys,
+Tailwind 4, shadcn-vue, Wayfinder typed routes).
+
+| | |
+|---|---|
+| Backend | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
+| Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
+| Quality | Pest (96 tests), Larastan level 7, Pint, vue-tsc, oxlint |
+
+## Features
+
+- **Organizations**: every user gets a personal workspace on sign-up and can create or join more.
+  An organization switcher in the sidebar changes the active tenant.
+- **Tenant isolation**: tenant-owned models use a `BelongsToOrganization` trait that adds a global
+  scope and stamps `organization_id` on create. Route model binding runs *after* the tenant is
+  resolved, so another tenant's records return 404.
+- **Roles and permissions**: Owner, Admin, Member and Viewer, each mapped to granular permissions
+  in a PHP enum. Spatie's *teams* mode scopes role assignments per organization, so one user can be
+  an Owner in one org and a Viewer in another.
+- **Invitations**: queued email invitations with expiry, seat-limit checks, verified-email matching
+  on accept, revocation, and nightly pruning of expired invitations.
+- **Billing**: Free, Pro and Business plans defined in `config/billing.php`. Includes a card-less
+  14-day trial, Stripe Checkout, plan swaps, cancel and resume during the grace period, the Stripe
+  customer portal, and invoices (loaded as a deferred prop).
+- **Plan limits**: seat and project limits are enforced in policies and validation, and the UI
+  shows an upgrade prompt.
+- **Audit log**: an activity feed written by model observers, actions and a queued Cashier webhook
+  listener.
+- **Dashboard**: KPI tiles, a 14-day activity chart, usage meters, recent projects, an onboarding
+  checklist and a trial banner. It supports dark mode, and every control is permission-aware.
+
+## Architecture
+
+```
+app/
+├── Actions/Organizations/   CreateOrganization, InviteMember, AcceptInvitation, RemoveMember, ...
+├── Billing/                 Plan (value object over config/billing.php), SubscriptionSummary
+├── Console/Commands/        permissions:sync (enums → Spatie tables, idempotent)
+├── Enums/                   Permission, OrganizationRole (role → permissions map), ProjectStatus
+├── Http/Middleware/         EnsureOrganizationContext (resolves tenant, sets Spatie team id)
+├── Listeners/               RecordSubscriptionActivity (queued, on Cashier WebhookHandled)
+├── Models/
+│   ├── Concerns/BelongsToOrganization.php   global scope + auto organization_id
+│   ├── Scopes/OrganizationScope.php
+│   └── Organization (Billable), User, Membership (pivot), Project, Activity, OrganizationInvitation
+├── Notifications/           OrganizationInvitationNotification (ShouldQueue)
+├── Policies/                OrganizationPolicy, ProjectPolicy (permissions + plan limits)
+└── Support/CurrentOrganization.php   request-scoped tenant context
+```
+
+### How a request is scoped
+
+1. `auth` and `verified` run, then the `organization` middleware (`EnsureOrganizationContext`)
+   resolves the user's current organization. If it is stale, the user falls back to another
+   membership. If they have none, they are redirected to create an organization.
+2. It stores the tenant in `CurrentOrganization` (a scoped singleton) and calls
+   `setPermissionsTeamId()`, so every `can()` and `hasRole()` check is evaluated inside that
+   organization.
+3. Route model binding (`{project}`) runs next. The middleware priority list puts the tenant
+   middleware before `SubstituteBindings`, so bindings are already tenant-filtered.
+4. Controllers authorize through policies, which check permissions *and* plan limits, e.g.
+   `ProjectPolicy::create()` denies with an upgrade message at the project limit.
+5. Shared Inertia props expose the current organization, role, permission list and plan.
+   The `usePermissions()` composable uses them to toggle UI. The server re-checks every action.
+
+> **Queued jobs and console commands have no implicit tenant.** Wrap tenant work in
+> `app(CurrentOrganization::class)->runAs($organization, fn () => ...)` or filter by
+> `organization_id` explicitly.
+
+### Adding a new tenant-owned resource
+
+1. Add a migration with `$table->foreignId('organization_id')->constrained()->cascadeOnDelete();`
+2. `use BelongsToOrganization;` on the model.
+3. Add permissions to `App\Enums\Permission`, grant them in `OrganizationRole::permissions()`, and
+   run `php artisan permissions:sync`.
+4. Write a policy using `$user->hasPermissionIn($organization, Permission::...)`.
+
+`Project` is the reference implementation (model, observer, policy, controller, Vue page, tests).
+
+## Getting started
+
+Requirements: PHP 8.3+ (with `pdo_sqlite`), Composer, Node 22+.
+
+```bash
+composer run setup        # install, .env, key, migrate, permissions:sync, build
+php artisan db:seed       # demo data (optional)
+composer run dev          # server + queue worker + vite
+```
+
+### Demo accounts (after seeding)
+
+All passwords are `password`. Everyone belongs to **Acme Inc** (on a Pro trial) and has their own
+personal workspace.
+
+| Email | Role in Acme Inc |
+|---|---|
+| test@example.com | Owner |
+| admin@example.com | Admin |
+| member@example.com | Member |
+| viewer@example.com | Viewer |
+
+### Stripe setup
+
+The app runs without Stripe: plans, trials and limits all work. To enable checkout:
+
+1. Create two products in Stripe (Pro, Business), each with a monthly and a yearly recurring price.
+2. Fill in `.env`:
+   ```dotenv
+   STRIPE_KEY=pk_test_...
+   STRIPE_SECRET=sk_test_...
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   STRIPE_PRICE_PRO_MONTHLY=price_...
+   STRIPE_PRICE_PRO_YEARLY=price_...
+   STRIPE_PRICE_BUSINESS_MONTHLY=price_...
+   STRIPE_PRICE_BUSINESS_YEARLY=price_...
+   ```
+3. Forward webhooks locally: `stripe listen --forward-to localhost:8000/stripe/webhook`.
+   Cashier keeps the `subscriptions` table in sync, and the app logs each change to the audit log.
+4. Enable the Customer Portal in the Stripe dashboard.
+
+Subscriptions are keyed on `organization_id` (`Cashier::useCustomerModel(Organization::class)`),
+and the organization owner's email is used as the Stripe customer email.
+
+## Testing and quality
+
+```bash
+php artisan test            # Pest feature tests
+composer run types:check    # Larastan level 7
+composer run lint           # Pint
+npm run check               # oxlint + formatting
+npm run types:check         # vue-tsc
+```
+
+The test suite covers tenant isolation (including cross-tenant route binding), per-organization
+role resolution, the full permission matrix, the invitation lifecycle and seat limits, member
+management rules (the owner can't be removed, users can't change their own role), organization
+deletion, plan resolution from Stripe prices, plan-limit enforcement and webhook activity
+logging.
+
+## Deployment notes
+
+- Run `php artisan permissions:sync` on every deploy (it is idempotent).
+- Run a queue worker (`php artisan queue:work`) for invitation emails and webhook listeners.
+- Schedule `php artisan schedule:run` every minute; it prunes expired invitations daily.
+- The Stripe webhook route (`/stripe/*`) is excluded from CSRF checks and verified by its signature.

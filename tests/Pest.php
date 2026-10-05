@@ -1,5 +1,9 @@
 <?php
 
+use App\Actions\Organizations\AddOrganizationMember;
+use App\Enums\OrganizationRole;
+use App\Models\Organization;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -20,31 +24,46 @@ pest()->extend(TestCase::class)
 
 /*
 |--------------------------------------------------------------------------
-| Expectations
-|--------------------------------------------------------------------------
-|
-| When you're writing tests, you often need to check that values meet certain conditions. The
-| "expect()" function gives you access to a set of "expectations" methods that you can use
-| to assert different things. Of course, you may extend the Expectation API at any time.
-|
-*/
-
-expect()->extend('toBeOne', function () {
-    return $this->toBe(1);
-});
-
-/*
-|--------------------------------------------------------------------------
 | Functions
 |--------------------------------------------------------------------------
-|
-| While Pest is very powerful out-of-the-box, you may have some testing code specific to your
-| project that you don't want to repeat in every file. Here you can also expose helpers as
-| global functions to help you to reduce the number of lines of code in your test files.
-|
 */
 
-function something()
+/**
+ * Create an organization (on a trial unless told otherwise) and a user who
+ * belongs to it with the given role and has it as their current organization.
+ *
+ * @return array{0: Organization, 1: User}
+ */
+function organizationWithUser(OrganizationRole $role = OrganizationRole::Owner, bool $trial = true): array
 {
-    // ..
+    $factory = Organization::factory();
+
+    if ($trial) {
+        $factory = $factory->onTrial();
+    }
+
+    if ($role === OrganizationRole::Owner) {
+        $organization = $factory->create();
+
+        return [$organization, $organization->owner];
+    }
+
+    $user = User::factory()->create();
+    $organization = $factory->withMember($user, $role)->create();
+    $user->switchOrganization($organization);
+
+    return [$organization, $user];
+}
+
+/**
+ * Add a user to an existing organization with a role.
+ */
+function memberOf(Organization $organization, OrganizationRole $role = OrganizationRole::Member): User
+{
+    $user = User::factory()->create();
+
+    app(AddOrganizationMember::class)->handle($organization, $user, $role);
+    $user->switchOrganization($organization);
+
+    return $user;
 }

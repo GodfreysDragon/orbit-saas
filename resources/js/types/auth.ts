@@ -1,3 +1,5 @@
+import type { CurrentOrganization, OrganizationSummary } from './organization';
+
 export type User = {
     id: number;
     name: string;
@@ -12,6 +14,8 @@ export type User = {
 
 export type Auth = {
     user: User;
+    organization: CurrentOrganization | null;
+    organizations: OrganizationSummary[];
 };
 
 export type Passkey = {

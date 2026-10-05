@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Actions\Organizations;
+
+use App\Enums\OrganizationRole;
+use App\Models\Activity;
+use App\Models\Organization;
+use App\Models\OrganizationInvitation;
+use App\Models\User;
+use App\Notifications\OrganizationInvitationNotification;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
+
+class InviteMember
+{
+    /**
+     * Create (or refresh) an invitation and email it on the queue.
+     * Validation of the email and seat limits happens in the form request.
+     */
+    public function handle(Organization $organization, User $inviter, string $email, OrganizationRole $role): OrganizationInvitation
+    {
+        $invitation = $organization->invitations()->updateOrCreate(
+            ['email' => Str::lower($email)],
+            [
+                'role' => $role,
+                'invited_by_id' => $inviter->getKey(),
+                'token' => Str::random(64),
+                'expires_at' => now()->addDays(7),
+            ],
+        );
+
+        Notification::route('mail', $invitation->email)
+            ->notify(new OrganizationInvitationNotification($invitation));
+
+        Activity::record(
+            'member.invited',
+            "Invited {$invitation->email} as {$role->label()}",
+            $invitation,
+            ['email' => $invitation->email, 'role' => $role->value],
+            $organization,
+            $inviter,
+        );
+
+        return $invitation;
+    }
+}

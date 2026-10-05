@@ -2,11 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Organization;
+use App\Support\CurrentOrganization;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -15,7 +18,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Scoped: reset at the start of every request and queued job.
+        $this->app->scoped(CurrentOrganization::class);
     }
 
     /**
@@ -24,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureBilling();
     }
 
     /**
@@ -46,5 +51,13 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Organizations, not users, are the Stripe customers.
+     */
+    protected function configureBilling(): void
+    {
+        Cashier::useCustomerModel(Organization::class);
     }
 }

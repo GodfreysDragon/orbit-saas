@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {
-    BookOpen,
+    Code,
     CreditCard,
     FolderKanban,
     History,
@@ -74,9 +74,9 @@ const organizationNavItems = computed(() =>
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs',
-        icon: BookOpen,
+        title: 'Source code',
+        href: 'https://github.com/GodfreysDragon/orbit-saas',
+        icon: Code,
     },
 ];
 </script>

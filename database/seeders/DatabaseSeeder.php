@@ -10,6 +10,7 @@ use App\Models\Organization;
 use App\Models\Project;
 use App\Models\User;
 use App\Support\CurrentOrganization;
+use Database\Factories\ProjectFactory;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -47,6 +48,9 @@ class DatabaseSeeder extends Seeder
 
             Project::factory()
                 ->count(8)
+                ->sequence(...collect(ProjectFactory::SAMPLES)->shuffle()->take(8)->map(
+                    fn (array $sample) => ['name' => $sample[0], 'description' => $sample[1]],
+                ))
                 ->for($acme)
                 ->create(['created_by_id' => $owner->id]);
 

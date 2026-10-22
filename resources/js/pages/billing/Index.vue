@@ -11,6 +11,8 @@ import {
 import { computed, ref } from 'vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import Heading from '@/components/Heading.vue';
+import IntervalToggle from '@/components/IntervalToggle.vue';
+import PlanCard from '@/components/PlanCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,7 +20,6 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
@@ -246,73 +247,17 @@ const statusBadge = computed(() => {
         <!-- Plans -->
         <div class="flex flex-wrap items-center justify-between gap-4">
             <h2 class="text-lg font-semibold">Plans</h2>
-            <div
-                class="inline-flex rounded-lg border p-1 text-sm"
-                role="group"
-                aria-label="Billing interval"
-            >
-                <button
-                    v-for="option in ['monthly', 'yearly'] as const"
-                    :key="option"
-                    type="button"
-                    class="rounded-md px-3 py-1.5 transition-colors"
-                    :class="
-                        interval === option
-                            ? 'bg-primary text-primary-foreground'
-                            : 'text-muted-foreground hover:text-foreground'
-                    "
-                    :aria-pressed="interval === option"
-                    @click="interval = option"
-                >
-                    {{ option === 'monthly' ? 'Monthly' : 'Yearly' }}
-                    <span
-                        v-if="option === 'yearly'"
-                        class="ml-1 text-xs opacity-80"
-                        >· 2 months free</span
-                    >
-                </button>
-            </div>
+            <IntervalToggle v-model="interval" />
         </div>
 
         <div class="grid gap-6 md:grid-cols-3">
-            <Card
+            <PlanCard
                 v-for="plan in plans"
                 :key="plan.key"
-                class="relative flex flex-col"
-                :class="
-                    plan.highlighted
-                        ? 'border-primary shadow-lg shadow-primary/10'
-                        : ''
-                "
+                :plan="plan"
+                :interval="interval"
             >
-                <Badge v-if="plan.highlighted" class="absolute -top-2.5 left-6"
-                    >Most popular</Badge
-                >
-                <CardHeader>
-                    <CardTitle>{{ plan.name }}</CardTitle>
-                    <CardDescription>{{ plan.description }}</CardDescription>
-                </CardHeader>
-                <CardContent class="flex-1 space-y-6">
-                    <div class="flex items-baseline gap-1">
-                        <span class="text-4xl font-semibold tracking-tight">
-                            ${{ plan.prices[interval] }}
-                        </span>
-                        <span class="text-sm text-muted-foreground">
-                            / {{ interval === 'monthly' ? 'month' : 'year' }}
-                        </span>
-                    </div>
-                    <ul class="space-y-2.5 text-sm">
-                        <li
-                            v-for="feature in plan.features"
-                            :key="feature"
-                            class="flex items-center gap-2"
-                        >
-                            <Check class="size-4 shrink-0 text-primary" />
-                            {{ feature }}
-                        </li>
-                    </ul>
-                </CardContent>
-                <CardFooter>
+                <template #footer>
                     <Button
                         class="w-full"
                         :variant="
@@ -335,8 +280,8 @@ const statusBadge = computed(() => {
                                 : ctaLabel(plan)
                         }}
                     </Button>
-                </CardFooter>
-            </Card>
+                </template>
+            </PlanCard>
         </div>
 
         <!-- Invoices -->

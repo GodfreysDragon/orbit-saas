@@ -10,11 +10,13 @@ A production-shaped starting point for B2B SaaS apps: **organizations** (multi-t
 Built on the official Laravel 13 Vue starter kit (Fortify auth with 2FA and passkeys,
 Tailwind 4, shadcn-vue, Wayfinder typed routes).
 
+![Dashboard](docs/screenshots/dashboard.png)
+
 |          |                                                                            |
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (96 tests), Larastan level 7, Pint, vue-tsc, oxlint                   |
+| Quality  | Pest (97 tests), Larastan level 7, Pint, vue-tsc, oxlint                   |
 
 ## Features
 
@@ -37,6 +39,17 @@ Tailwind 4, shadcn-vue, Wayfinder typed routes).
   listener.
 - **Dashboard**: KPI tiles, a 14-day activity chart, usage meters, recent projects, an onboarding
   checklist and a trial banner. It supports dark mode, and every control is permission-aware.
+
+## Screenshots
+
+|                                                                                    |                                                                            |
+| ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| ![Landing page with pricing from config/billing.php](docs/screenshots/landing.png) | ![Dashboard in dark mode](docs/screenshots/dashboard-dark.png)             |
+| Landing page; pricing is read from `config/billing.php`                            | Dashboard in dark mode                                                     |
+| ![Projects as an Owner](docs/screenshots/projects.png)                             | ![Projects as a Viewer](docs/screenshots/projects-viewer.png)              |
+| Projects as an **Owner**                                                           | The same page as a **Viewer**: no create or edit controls, fewer nav items |
+| ![Members and invitations](docs/screenshots/members.png)                           | ![Billing](docs/screenshots/billing.png)                                   |
+| Members, roles and invitations with seat usage                                     | Billing: trial status, plan picker, portal and invoices                    |
 
 ## Architecture
 

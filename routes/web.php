@@ -14,15 +14,20 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', WelcomeController::class)->name('home');
 
+// Guests can view an invitation and sign up or log in from it. Accepting it
+// verifies the invited address, so it doesn't require a verified email first.
+Route::get('invitations/{token}', [AcceptInvitationController::class, 'show'])->name('invitations.show');
+
+Route::middleware('auth')->group(function () {
+    Route::post('invitations/{token}', [AcceptInvitationController::class, 'store'])->name('invitations.accept');
+    Route::delete('invitations/{token}', [AcceptInvitationController::class, 'destroy'])->name('invitations.decline');
+});
+
 Route::middleware(['auth', 'verified'])->group(function () {
     // Routes that work without an active organization.
     Route::get('organizations/create', [OrganizationController::class, 'create'])->name('organizations.create');
     Route::post('organizations', [OrganizationController::class, 'store'])->name('organizations.store');
     Route::put('organizations/{organization}/switch', [CurrentOrganizationController::class, 'update'])->name('organizations.switch');
-
-    Route::get('invitations/{token}', [AcceptInvitationController::class, 'show'])->name('invitations.show');
-    Route::post('invitations/{token}', [AcceptInvitationController::class, 'store'])->name('invitations.accept');
-    Route::delete('invitations/{token}', [AcceptInvitationController::class, 'destroy'])->name('invitations.decline');
 
     // Tenant routes: everything below runs inside the user's current organization.
     Route::middleware('organization')->group(function () {

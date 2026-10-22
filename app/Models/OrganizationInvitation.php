@@ -75,6 +75,26 @@ class OrganizationInvitation extends Model
         return $this->expires_at->isPast();
     }
 
+    public function isFor(?string $email): bool
+    {
+        return $email !== null && Str::lower($email) === Str::lower($this->email);
+    }
+
+    /**
+     * Find an invitation that can still be accepted, e.g. from a sign-up form.
+     */
+    public static function findPending(?string $token): ?self
+    {
+        if (blank($token)) {
+            return null;
+        }
+
+        return self::with('organization')
+            ->where('token', $token)
+            ->where('expires_at', '>', now())
+            ->first();
+    }
+
     /**
      * Expired invitations are removed by the scheduled `model:prune` command.
      *

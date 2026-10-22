@@ -84,6 +84,7 @@ test('upgrading lifts the project limit', function () {
 });
 
 test('the billing page lists plans and the current subscription', function () {
+    config(['cashier.key' => null, 'cashier.secret' => null]);
     [, $owner] = organizationWithUser();
 
     $this->actingAs($owner)

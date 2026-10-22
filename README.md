@@ -28,8 +28,10 @@ Tailwind 4, shadcn-vue, Wayfinder typed routes).
 - **Roles and permissions**: Owner, Admin, Member and Viewer, each mapped to granular permissions
   in a PHP enum. Spatie's _teams_ mode scopes role assignments per organization, so one user can be
   an Owner in one org and a Viewer in another.
-- **Invitations**: queued email invitations with expiry, seat-limit checks, verified-email matching
-  on accept, revocation, and nightly pruning of expired invitations.
+- **Invitations**: queued email invitations with expiry, seat-limit checks, invited-email matching
+  on accept, revocation, and nightly pruning of expired invitations. New invitees sign up straight
+  from the link: the email is pre-filled, and because the link proves they own the inbox, the
+  account is verified and joins the organization in one step, with no second verification email.
 - **Billing**: Free, Pro and Business plans defined in `config/billing.php`. Includes a card-less
   14-day trial, Stripe Checkout, plan swaps, cancel and resume during the grace period, the Stripe
   customer portal, and invoices (loaded as a deferred prop).

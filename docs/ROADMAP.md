@@ -30,8 +30,6 @@ architecture are in the [README](../README.md).
 
 - [ ] Add a "resend invitation" action, and send an in-app notification when an existing user is
       invited.
-- [ ] Let an invitation link carry the invitee through registration (sign-up with the email
-      pre-filled, then back to the accept page).
 - [ ] Add per-seat billing (Cashier quantity) as an alternative to fixed seat limits.
 - [ ] Filter the activity log by event type, member and date range, and add CSV export.
 - [ ] Add a super-admin area to impersonate users and view organizations and subscriptions

@@ -12,6 +12,7 @@ import { store } from '@/routes/register';
 
 defineProps<{
     passwordRules: string;
+    invitation: { token: string; email: string; organization: string } | null;
 }>();
 
 defineOptions({
@@ -31,6 +32,22 @@ defineOptions({
         v-slot="{ errors, processing }"
         class="flex flex-col gap-6"
     >
+        <p
+            v-if="invitation"
+            class="rounded-md bg-primary/10 p-3 text-center text-sm"
+            data-test="invitation-banner"
+        >
+            Create your account to join
+            <strong>{{ invitation.organization }}</strong
+            >.
+        </p>
+        <input
+            v-if="invitation"
+            type="hidden"
+            name="invitation"
+            :value="invitation.token"
+        />
+
         <div class="grid gap-6">
             <div class="grid gap-2">
                 <Label for="name">Name</Label>
@@ -56,6 +73,8 @@ defineOptions({
                     :tabindex="2"
                     autocomplete="email"
                     name="email"
+                    :default-value="invitation?.email"
+                    :readonly="!!invitation"
                     placeholder="email@example.com"
                 />
                 <InputError :message="errors.email" />

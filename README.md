@@ -1,4 +1,7 @@
-# SaaS Boilerplate — Laravel + Vue, multi-tenant
+# Orbit SaaS — multi-tenant Laravel + Vue boilerplate
+
+[![tests](https://github.com/GodfreysDragon/orbit-saas/actions/workflows/tests.yml/badge.svg)](https://github.com/GodfreysDragon/orbit-saas/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A production-shaped starting point for B2B SaaS apps: **organizations** (multi-tenancy),
 **role-based permissions** (Spatie, scoped per organization), **Stripe subscription billing**
@@ -7,21 +10,21 @@ A production-shaped starting point for B2B SaaS apps: **organizations** (multi-t
 Built on the official Laravel 13 Vue starter kit (Fortify auth with 2FA and passkeys,
 Tailwind 4, shadcn-vue, Wayfinder typed routes).
 
-| | |
-|---|---|
-| Backend | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
+|          |                                                                            |
+| -------- | -------------------------------------------------------------------------- |
+| Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality | Pest (96 tests), Larastan level 7, Pint, vue-tsc, oxlint |
+| Quality  | Pest (96 tests), Larastan level 7, Pint, vue-tsc, oxlint                   |
 
 ## Features
 
 - **Organizations**: every user gets a personal workspace on sign-up and can create or join more.
   An organization switcher in the sidebar changes the active tenant.
 - **Tenant isolation**: tenant-owned models use a `BelongsToOrganization` trait that adds a global
-  scope and stamps `organization_id` on create. Route model binding runs *after* the tenant is
+  scope and stamps `organization_id` on create. Route model binding runs _after_ the tenant is
   resolved, so another tenant's records return 404.
 - **Roles and permissions**: Owner, Admin, Member and Viewer, each mapped to granular permissions
-  in a PHP enum. Spatie's *teams* mode scopes role assignments per organization, so one user can be
+  in a PHP enum. Spatie's _teams_ mode scopes role assignments per organization, so one user can be
   an Owner in one org and a Viewer in another.
 - **Invitations**: queued email invitations with expiry, seat-limit checks, verified-email matching
   on accept, revocation, and nightly pruning of expired invitations.
@@ -64,7 +67,7 @@ app/
    organization.
 3. Route model binding (`{project}`) runs next. The middleware priority list puts the tenant
    middleware before `SubstituteBindings`, so bindings are already tenant-filtered.
-4. Controllers authorize through policies, which check permissions *and* plan limits, e.g.
+4. Controllers authorize through policies, which check permissions _and_ plan limits, e.g.
    `ProjectPolicy::create()` denies with an upgrade message at the project limit.
 5. Shared Inertia props expose the current organization, role, permission list and plan.
    The `usePermissions()` composable uses them to toggle UI. The server re-checks every action.
@@ -98,12 +101,12 @@ composer run dev          # server + queue worker + vite
 All passwords are `password`. Everyone belongs to **Acme Inc** (on a Pro trial) and has their own
 personal workspace.
 
-| Email | Role in Acme Inc |
-|---|---|
-| test@example.com | Owner |
-| admin@example.com | Admin |
-| member@example.com | Member |
-| viewer@example.com | Viewer |
+| Email              | Role in Acme Inc |
+| ------------------ | ---------------- |
+| test@example.com   | Owner            |
+| admin@example.com  | Admin            |
+| member@example.com | Member           |
+| viewer@example.com | Viewer           |
 
 ### Stripe setup
 
@@ -111,15 +114,15 @@ The app runs without Stripe: plans, trials and limits all work. To enable checko
 
 1. Create two products in Stripe (Pro, Business), each with a monthly and a yearly recurring price.
 2. Fill in `.env`:
-   ```dotenv
-   STRIPE_KEY=pk_test_...
-   STRIPE_SECRET=sk_test_...
-   STRIPE_WEBHOOK_SECRET=whsec_...
-   STRIPE_PRICE_PRO_MONTHLY=price_...
-   STRIPE_PRICE_PRO_YEARLY=price_...
-   STRIPE_PRICE_BUSINESS_MONTHLY=price_...
-   STRIPE_PRICE_BUSINESS_YEARLY=price_...
-   ```
+    ```dotenv
+    STRIPE_KEY=pk_test_...
+    STRIPE_SECRET=sk_test_...
+    STRIPE_WEBHOOK_SECRET=whsec_...
+    STRIPE_PRICE_PRO_MONTHLY=price_...
+    STRIPE_PRICE_PRO_YEARLY=price_...
+    STRIPE_PRICE_BUSINESS_MONTHLY=price_...
+    STRIPE_PRICE_BUSINESS_YEARLY=price_...
+    ```
 3. Forward webhooks locally: `stripe listen --forward-to localhost:8000/stripe/webhook`.
    Cashier keeps the `subscriptions` table in sync, and the app logs each change to the audit log.
 4. Enable the Customer Portal in the Stripe dashboard.
@@ -149,3 +152,12 @@ logging.
 - Run a queue worker (`php artisan queue:work`) for invitation emails and webhook listeners.
 - Schedule `php artisan schedule:run` every minute; it prunes expired invitations daily.
 - The Stripe webhook route (`/stripe/*`) is excluded from CSRF checks and verified by its signature.
+
+## Roadmap
+
+Known limitations and planned work (failed-payment handling, ownership transfer, tenant-aware
+queued jobs, browser tests and more) are tracked in [docs/ROADMAP.md](docs/ROADMAP.md).
+
+## License
+
+[MIT](LICENSE)

@@ -1,11 +1,16 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
+    "name": "godfreysdragon/orbit-saas",
     "type": "project",
     "description": "Multi-tenant SaaS boilerplate: Laravel + Vue (Inertia), organizations, role-based permissions and Stripe billing.",
     "keywords": [
         "laravel",
-        "framework"
+        "vue",
+        "inertia",
+        "saas",
+        "multi-tenant",
+        "stripe",
+        "boilerplate"
     ],
     "license": "MIT",
     "require": {

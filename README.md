@@ -141,8 +141,7 @@ The app runs without Stripe: plans, trials and limits all work. To enable checko
 3. Forward webhooks locally. `stripe listen --print-secret` prints the value for
    `STRIPE_WEBHOOK_SECRET`; then run:
     ```bash
-    stripe listen --forward-to localhost:8000/stripe/webhook --events \
-      customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,customer.updated,customer.deleted,payment_method.automatically_updated,invoice.payment_action_required,invoice.payment_succeeded
+    stripe listen --forward-to localhost:8000/stripe/webhook --events customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,customer.updated,customer.deleted,payment_method.automatically_updated,invoice.payment_action_required,invoice.payment_succeeded
     ```
     Cashier keeps the `subscriptions` table in sync, and the app logs each change to the audit log.
     In production, `php artisan cashier:webhook` registers the same events.

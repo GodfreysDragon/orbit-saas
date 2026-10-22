@@ -53,6 +53,7 @@ class HandleInertiaRequests extends Middleware
                     ->map->only('id', 'name', 'slug', 'personal'),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'pageGuides' => config('app.page_guides'),
         ];
     }
 

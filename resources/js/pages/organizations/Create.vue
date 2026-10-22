@@ -3,6 +3,7 @@ import { Form, Head } from '@inertiajs/vue3';
 import { Building2 } from '@lucide/vue';
 import OrganizationController from '@/actions/App/Http/Controllers/Organizations/OrganizationController';
 import InputError from '@/components/InputError.vue';
+import PageGuide from '@/components/PageGuide.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -25,7 +26,18 @@ defineOptions({
 <template>
     <Head title="New organization" />
 
-    <div class="flex flex-1 items-start justify-center p-4 md:p-10">
+    <div
+        class="flex flex-1 flex-col items-center justify-start gap-6 p-4 md:p-10"
+    >
+        <PageGuide
+            id="organization-create"
+            class="w-full max-w-lg"
+            summary="Organizations are this app's tenants. Each has its own members, projects, billing and activity. You become the Owner of any organization you create, and you can switch between organizations from the sidebar."
+            :details="[
+                'The `CreateOrganization` action creates the organization, your membership and your Owner role in one transaction.',
+                'New organizations start a card-less 14-day trial of the Pro plan.',
+            ]"
+        />
         <Card class="w-full max-w-lg">
             <CardHeader>
                 <div

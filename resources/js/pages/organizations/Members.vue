@@ -24,6 +24,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import PageGuide from '@/components/PageGuide.vue';
 import UsageMeter from '@/components/UsageMeter.vue';
 import { initials, timeAgo } from '@/lib/format';
 import { index as billingIndex } from '@/routes/billing';
@@ -125,6 +126,17 @@ const roleById = (value: string) =>
         <Heading
             title="Members"
             description="Manage who has access to this organization and what they can do."
+        />
+
+        <PageGuide
+            id="members"
+            summary="Invite teammates by email, change their roles or remove them. Owner, Admin, Member and Viewer each see and can do different things. Log in as admin@, member@ or viewer@example.com (password: password) to compare."
+            :details="[
+                'Roles are assigned per organization (Spatie permissions in teams mode), so one person can be an Owner here and a Viewer elsewhere.',
+                'Pending invitations count toward the plan\'s seat limit and expire after 7 days.',
+                'The invitation link proves the invitee owns the address, so new users sign up and join in one step without a second verification email.',
+                'The owner can\'t be removed or demoted, and nobody can change their own role.',
+            ]"
         />
 
         <div class="grid gap-6 lg:grid-cols-3">

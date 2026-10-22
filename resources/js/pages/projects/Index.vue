@@ -14,6 +14,7 @@ import { ref, watch } from 'vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import Heading from '@/components/Heading.vue';
+import PageGuide from '@/components/PageGuide.vue';
 import PaginationLinks from '@/components/PaginationLinks.vue';
 import ProjectFormDialog from '@/components/ProjectFormDialog.vue';
 import { Badge } from '@/components/ui/badge';
@@ -148,6 +149,16 @@ const statusDot: Record<Project['status'], string> = {
                 <Plus class="size-4" /> New project
             </Button>
         </div>
+
+        <PageGuide
+            id="projects"
+            summary="Projects are the example of data an organization owns. You can search, filter, create, edit and delete them. In a real product you'd rename or copy this resource for your own domain, such as invoices, documents or tickets."
+            :details="[
+                'The `BelongsToOrganization` trait scopes every query to the current organization, so another organization\'s project is a 404.',
+                '`ProjectPolicy` checks your role\'s permissions and the plan\'s project limit (3 on Free) before allowing a new project.',
+                'A model observer writes each change to the activity log.',
+            ]"
+        />
 
         <div class="flex flex-col gap-3 sm:flex-row">
             <div class="relative flex-1 sm:max-w-xs">

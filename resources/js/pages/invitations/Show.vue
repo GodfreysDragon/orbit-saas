@@ -2,6 +2,7 @@
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { MailOpen } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import PageGuide from '@/components/PageGuide.vue';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -52,7 +53,18 @@ const visitOptions = {
 <template>
     <Head title="Invitation" />
 
-    <div class="flex flex-1 items-start justify-center p-4 md:p-10">
+    <div
+        class="flex flex-1 flex-col items-center justify-start gap-6 p-4 md:p-10"
+    >
+        <PageGuide
+            id="invitation"
+            class="w-full max-w-md"
+            summary="An invitation to join another organization. Accepting adds it to your organization switcher with the role you were invited as."
+            :details="[
+                'Only the email address the invitation was sent to can accept it, and accepting also verifies that address.',
+                'Invitations expire after 7 days and are pruned nightly by a scheduled command.',
+            ]"
+        />
         <Card class="w-full max-w-md text-center">
             <CardHeader class="items-center">
                 <div

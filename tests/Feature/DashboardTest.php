@@ -56,3 +56,12 @@ test('users without an organization are asked to create one', function () {
         ->get(route('dashboard'))
         ->assertRedirect(route('organizations.create'));
 });
+
+test('page guides follow the app.page_guides setting', function (bool $enabled) {
+    config(['app.page_guides' => $enabled]);
+    [, $user] = organizationWithUser();
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('pageGuides', $enabled));
+})->with([true, false]);

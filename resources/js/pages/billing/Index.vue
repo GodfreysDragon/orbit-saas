@@ -12,6 +12,7 @@ import { computed, ref } from 'vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import Heading from '@/components/Heading.vue';
 import IntervalToggle from '@/components/IntervalToggle.vue';
+import PageGuide from '@/components/PageGuide.vue';
 import PlanCard from '@/components/PlanCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -135,6 +136,17 @@ const statusBadge = computed(() => {
         <Heading
             title="Billing"
             description="Manage your organization's subscription, payment method and invoices."
+        />
+
+        <PageGuide
+            id="billing"
+            summary="The organization's subscription. New organizations get a 14-day Pro trial with no card required, then can upgrade, switch plans, cancel and resume, or manage cards and invoices in Stripe's portal. It's in Stripe test mode: pay with card 4242 4242 4242 4242, any future expiry and any CVC."
+            :details="[
+                'The organization, not the user, is the Stripe customer (Laravel Cashier), so the team shares one subscription.',
+                'Plans, prices and limits live in `config/billing.php`. Changing a plan updates seat and project limits straight away.',
+                'Stripe webhooks keep the local subscription in sync and add entries to the activity log.',
+                'Only the Owner has the `billing.manage` permission, so other roles don\'t see this page.',
+            ]"
         />
 
         <Alert v-if="!stripeConfigured">

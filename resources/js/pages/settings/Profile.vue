@@ -6,6 +6,7 @@ import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileCo
 import DeleteUser from '@/components/DeleteUser.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import PageGuide from '@/components/PageGuide.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,6 +38,15 @@ const user = computed(() => page.props.auth.user);
             variant="small"
             title="Profile"
             description="Update your name and email address"
+        />
+
+        <PageGuide
+            id="settings-profile"
+            summary="Your personal account details. Unlike organization settings, these follow you into every organization you belong to."
+            :details="[
+                'Changing your email clears its verified status, so you\'ll be asked to verify the new address.',
+                'Deleting your account asks for your password first.',
+            ]"
         />
 
         <Form

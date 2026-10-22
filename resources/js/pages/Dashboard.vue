@@ -12,6 +12,7 @@ import {
 import { computed, ref } from 'vue';
 import ActivityChart from '@/components/ActivityChart.vue';
 import ActivityFeed from '@/components/ActivityFeed.vue';
+import PageGuide from '@/components/PageGuide.vue';
 import StatCard from '@/components/StatCard.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -171,6 +172,17 @@ const projectStatusClass: Record<Project['status'], string> = {
                 </Link>
             </Button>
         </div>
+
+        <PageGuide
+            id="dashboard"
+            summary="A snapshot of the organization you're working in: members, projects, plan and recent activity. Switch organizations from the top of the sidebar and everything here changes with it. Click Setup to jump to the onboarding checklist."
+            :details="[
+                'Every number is scoped to the current organization, which middleware resolves before the page loads.',
+                'The activity chart is an Inertia deferred prop, so the page renders first and the chart streams in.',
+                'Buttons and cards only appear when your role allows them. Log in as viewer@example.com to compare.',
+                'Usage meters compare live counts with the plan limits in `config/billing.php`.',
+            ]"
+        />
 
         <!-- KPI row -->
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

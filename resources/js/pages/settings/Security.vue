@@ -3,6 +3,7 @@ import { Form, Head } from '@inertiajs/vue3';
 import SecurityController from '@/actions/App/Http/Controllers/Settings/SecurityController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import PageGuide from '@/components/PageGuide.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -38,6 +39,15 @@ defineOptions({
     <h1 class="sr-only">Security settings</h1>
 
     <div class="space-y-6">
+        <PageGuide
+            id="settings-security"
+            summary="Protect your account: change your password, turn on two-factor authentication with an authenticator app, or add a passkey to sign in with your fingerprint, face or security key."
+            :details="[
+                'Authentication comes from Laravel Fortify, with time-based one-time passwords (TOTP) and recovery codes for 2FA.',
+                'Passkeys use WebAuthn, and sensitive changes ask you to confirm your password first.',
+            ]"
+        />
+
         <Heading
             variant="small"
             title="Update password"

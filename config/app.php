@@ -17,6 +17,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Demo Page Guides
+    |--------------------------------------------------------------------------
+    |
+    | Short "About this page" callouts that explain each page to visitors of
+    | the demo, plus one-click demo accounts on the login page. Turn them off
+    | when building a real product on this boilerplate.
+    |
+    */
+
+    'page_guides' => (bool) env('APP_PAGE_GUIDES', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

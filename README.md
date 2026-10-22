@@ -114,7 +114,11 @@ composer run dev          # server + queue worker + vite
 ### Demo accounts (after seeding)
 
 All passwords are `password`. Everyone belongs to **Acme Inc** (on a Pro trial) and has their own
-personal workspace.
+personal workspace. The login page has one-click buttons for each role.
+
+Every page also shows a collapsible **About this page** guide explaining what it does and how it's
+built. Set `APP_PAGE_GUIDES=false` to hide the guides and the demo login buttons when building a
+real product.
 
 | Email              | Role in Acme Inc |
 | ------------------ | ---------------- |

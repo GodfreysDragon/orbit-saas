@@ -3,6 +3,7 @@ import { Form, Head } from '@inertiajs/vue3';
 import OrganizationController from '@/actions/App/Http/Controllers/Organizations/OrganizationController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import PageGuide from '@/components/PageGuide.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -53,6 +54,16 @@ defineProps<{
         <Heading
             title="Organization settings"
             description="General information about this organization."
+        />
+
+        <PageGuide
+            id="organization-settings"
+            summary="Rename the organization, or delete it along with all of its projects, members and history. Your personal workspace can't be deleted."
+            :details="[
+                'Renaming needs the `organization.update` permission. Deleting is Owner-only.',
+                'Deleting runs the `DeleteOrganization` action, and foreign keys cascade so no orphaned tenant data is left behind.',
+                'Members who had this organization selected are moved to another one they belong to.',
+            ]"
         />
 
         <div class="max-w-2xl space-y-6">

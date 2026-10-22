@@ -1,4 +1,4 @@
-﻿# Orbit SaaS â€” multi-tenant Laravel + Vue boilerplate
+# Orbit SaaS — multi-tenant Laravel + Vue boilerplate
 
 [![tests](https://github.com/GodfreysDragon/orbit-saas/actions/workflows/tests.yml/badge.svg)](https://github.com/GodfreysDragon/orbit-saas/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -16,7 +16,7 @@ Tailwind 4, shadcn-vue, Wayfinder typed routes).
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (105 tests), Larastan level 7, Pint, vue-tsc, oxlint                  |
+| Quality  | Pest (105 tests), Larastan level 7, Pint, vue-tsc, oxlint                   |
 
 ## Features
 
@@ -57,19 +57,19 @@ Tailwind 4, shadcn-vue, Wayfinder typed routes).
 
 ```
 app/
-â”œâ”€â”€ Actions/Organizations/   CreateOrganization, InviteMember, AcceptInvitation, RemoveMember, ...
-â”œâ”€â”€ Billing/                 Plan (value object over config/billing.php), SubscriptionSummary
-â”œâ”€â”€ Console/Commands/        permissions:sync (enums â†’ Spatie tables, idempotent)
-â”œâ”€â”€ Enums/                   Permission, OrganizationRole (role â†’ permissions map), ProjectStatus
-â”œâ”€â”€ Http/Middleware/         EnsureOrganizationContext (resolves tenant, sets Spatie team id)
-â”œâ”€â”€ Listeners/               RecordSubscriptionActivity (queued, on Cashier WebhookHandled)
-â”œâ”€â”€ Models/
-â”‚   â”œâ”€â”€ Concerns/BelongsToOrganization.php   global scope + auto organization_id
-â”‚   â”œâ”€â”€ Scopes/OrganizationScope.php
-â”‚   â””â”€â”€ Organization (Billable), User, Membership (pivot), Project, Activity, OrganizationInvitation
-â”œâ”€â”€ Notifications/           OrganizationInvitationNotification (ShouldQueue)
-â”œâ”€â”€ Policies/                OrganizationPolicy, ProjectPolicy (permissions + plan limits)
-â””â”€â”€ Support/CurrentOrganization.php   request-scoped tenant context
+├── Actions/Organizations/   CreateOrganization, InviteMember, AcceptInvitation, RemoveMember, ...
+├── Billing/                 Plan (value object over config/billing.php), SubscriptionSummary
+├── Console/Commands/        permissions:sync (enums → Spatie tables, idempotent)
+├── Enums/                   Permission, OrganizationRole (role → permissions map), ProjectStatus
+├── Http/Middleware/         EnsureOrganizationContext (resolves tenant, sets Spatie team id)
+├── Listeners/               RecordSubscriptionActivity (queued, on Cashier WebhookHandled)
+├── Models/
+│   ├── Concerns/BelongsToOrganization.php   global scope + auto organization_id
+│   ├── Scopes/OrganizationScope.php
+│   └── Organization (Billable), User, Membership (pivot), Project, Activity, OrganizationInvitation
+├── Notifications/           OrganizationInvitationNotification (ShouldQueue)
+├── Policies/                OrganizationPolicy, ProjectPolicy (permissions + plan limits)
+└── Support/CurrentOrganization.php   request-scoped tenant context
 ```
 
 ### How a request is scoped

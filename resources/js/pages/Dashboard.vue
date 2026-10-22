@@ -9,7 +9,7 @@ import {
     Mail,
     Users,
 } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import ActivityChart from '@/components/ActivityChart.vue';
 import ActivityFeed from '@/components/ActivityFeed.vue';
 import StatCard from '@/components/StatCard.vue';
@@ -104,6 +104,34 @@ const visibleChecklist = computed(() =>
 const checklistDone = computed(
     () => visibleChecklist.value.filter((item) => item.done).length,
 );
+const checklistComplete = computed(
+    () => checklistDone.value === visibleChecklist.value.length,
+);
+
+// The Setup tile jumps to the checklist and briefly highlights it.
+const highlightChecklist = ref(false);
+let highlightTimer: ReturnType<typeof setTimeout> | undefined;
+
+function showChecklist(event: MouseEvent) {
+    const checklistCard = document.getElementById('get-started');
+
+    if (!checklistCard) return;
+
+    event.preventDefault();
+
+    const reduceMotion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+    ).matches;
+    checklistCard.scrollIntoView({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        block: 'center',
+    });
+    checklistCard.focus({ preventScroll: true });
+
+    highlightChecklist.value = true;
+    clearTimeout(highlightTimer);
+    highlightTimer = setTimeout(() => (highlightChecklist.value = false), 1600);
+}
 
 const statusLabel: Record<BillingSummary['status'], string> = {
     free: 'Free',
@@ -192,6 +220,9 @@ const projectStatusClass: Record<Project['status'], string> = {
                 :value="`${checklistDone}/${visibleChecklist.length}`"
                 :icon="CheckCircle2"
                 hint="Onboarding steps complete"
+                :href="checklistComplete ? undefined : '#get-started'"
+                data-test="setup-stat"
+                @click="showChecklist"
             />
         </div>
 
@@ -303,7 +334,16 @@ const projectStatusClass: Record<Project['status'], string> = {
 
             <div class="flex flex-col gap-6">
                 <!-- Onboarding -->
-                <Card v-if="checklistDone < visibleChecklist.length">
+                <Card
+                    v-if="!checklistComplete"
+                    id="get-started"
+                    tabindex="-1"
+                    class="scroll-mt-6 transition-shadow duration-500 outline-none"
+                    :class="
+                        highlightChecklist &&
+                        'ring-2 ring-primary ring-offset-2 ring-offset-background'
+                    "
+                >
                     <CardHeader>
                         <CardTitle>Get started</CardTitle>
                         <CardDescription

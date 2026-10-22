@@ -126,6 +126,8 @@ personal workspace.
 The app runs without Stripe: plans, trials and limits all work. To enable checkout:
 
 1. Create two products in Stripe (Pro, Business), each with a monthly and a yearly recurring price.
+   No account yet? `stripe sandboxes create --email you@example.com` provisions a claimable test
+   sandbox and logs the CLI in to it.
 2. Fill in `.env`:
     ```dotenv
     STRIPE_KEY=pk_test_...
@@ -136,9 +138,19 @@ The app runs without Stripe: plans, trials and limits all work. To enable checko
     STRIPE_PRICE_BUSINESS_MONTHLY=price_...
     STRIPE_PRICE_BUSINESS_YEARLY=price_...
     ```
-3. Forward webhooks locally: `stripe listen --forward-to localhost:8000/stripe/webhook`.
-   Cashier keeps the `subscriptions` table in sync, and the app logs each change to the audit log.
-4. Enable the Customer Portal in the Stripe dashboard.
+3. Forward webhooks locally. `stripe listen --print-secret` prints the value for
+   `STRIPE_WEBHOOK_SECRET`; then run:
+    ```bash
+    stripe listen --forward-to localhost:8000/stripe/webhook --events \
+      customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,customer.updated,customer.deleted,payment_method.automatically_updated,invoice.payment_action_required,invoice.payment_succeeded
+    ```
+    Cashier keeps the `subscriptions` table in sync, and the app logs each change to the audit log.
+    In production, `php artisan cashier:webhook` registers the same events.
+4. Enable the Customer Portal in the Stripe dashboard (or create a portal configuration through
+   the API) so the **Billing portal** button can open it.
+
+Checkout with the `4242 4242 4242 4242` test card, webhook sync, plan swaps, cancel and resume,
+the customer portal and invoices have all been verified end to end against a Stripe sandbox.
 
 Subscriptions are keyed on `organization_id` (`Cashier::useCustomerModel(Organization::class)`),
 and the organization owner's email is used as the Stripe customer email.

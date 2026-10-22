@@ -5,10 +5,10 @@ architecture are in the [README](../README.md).
 
 ## Known limitations
 
-- **Stripe Checkout hasn't been tested against a live Stripe account yet.** Plan resolution,
-  trials, limits and webhook logging are covered by tests that use simulated subscription rows.
-  The Stripe-hosted flows (Checkout, swap, cancel/resume, the customer portal and invoices) use
-  Cashier's standard APIs but haven't been run against a Stripe test account yet.
+- **Stripe flows are verified manually, not in CI.** Checkout, webhook sync, plan swap,
+  cancel and resume, the customer portal and invoices were run end to end against a Stripe
+  sandbox. The automated tests cover plan resolution, trials, limits and webhook logging with
+  simulated subscription rows.
 - **Queued jobs and console commands have no implicit tenant.** They must call
   `CurrentOrganization::runAs()` or filter by `organization_id` themselves.
 - **Ownership can't be transferred.** The owner can't leave or be removed, and there is no
@@ -18,8 +18,6 @@ architecture are in the [README](../README.md).
 
 ## Next up
 
-- [ ] Test the full Stripe flow in test mode with `stripe listen`: Checkout, webhook sync,
-      plan swap, cancel and resume, the billing portal and invoices.
 - [ ] Handle failed payments (`past_due`): show a dashboard banner that links to the portal, and
       decide whether limits drop to Free during dunning.
 - [ ] Add an ownership transfer flow (owner → existing admin), with a policy and tests.

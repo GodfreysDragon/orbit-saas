@@ -16,7 +16,7 @@ Tailwind 4, shadcn-vue, Wayfinder typed routes).
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (105 tests), Larastan level 7, Pint, vue-tsc, oxlint                   |
+| Quality  | Pest (105 tests), Larastan level 7, Pint, vue-tsc, oxlint                  |
 
 ## Features
 
@@ -44,14 +44,22 @@ Tailwind 4, shadcn-vue, Wayfinder typed routes).
 
 ## Screenshots
 
+**Subscribing through Stripe Checkout** (test mode, recorded against a real Stripe sandbox): a
+one-click demo login, then upgrading to Pro with the `4242` test card. The webhook marks the plan
+Active and the paid invoice appears.
+
+![Stripe Checkout flow, from demo login to an active Pro subscription](docs/screenshots/checkout.gif)
+
 |                                                                                    |                                                                            |
 | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | ![Landing page with pricing from config/billing.php](docs/screenshots/landing.png) | ![Dashboard in dark mode](docs/screenshots/dashboard-dark.png)             |
 | Landing page; pricing is read from `config/billing.php`                            | Dashboard in dark mode                                                     |
 | ![Projects as an Owner](docs/screenshots/projects.png)                             | ![Projects as a Viewer](docs/screenshots/projects-viewer.png)              |
-| Projects as an **Owner**                                                           | The same page as a **Viewer**: no create or edit controls, fewer nav items |
+| Projects as an **Owner**, with its "About this page" guide open                    | The same page as a **Viewer**: no create or edit controls, fewer nav items |
 | ![Members and invitations](docs/screenshots/members.png)                           | ![Billing](docs/screenshots/billing.png)                                   |
 | Members, roles and invitations with seat usage                                     | Billing: trial status, plan picker, portal and invoices                    |
+| ![Login with one-click demo accounts](docs/screenshots/login.png)                  |                                                                            |
+| Login with one-click demo accounts for each role                                   |                                                                            |
 
 ## Architecture
 

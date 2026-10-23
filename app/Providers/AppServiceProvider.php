@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\Organization;
 use App\Support\CurrentOrganization;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -41,6 +42,13 @@ class AppServiceProvider extends ServiceProvider
         DB::prohibitDestructiveCommands(
             app()->isProduction(),
         );
+
+        /** @var string|null $proxies */
+        $proxies = config('app.trusted_proxies');
+
+        if ($proxies) {
+            TrustProxies::at($proxies === '*' ? '*' : explode(',', $proxies));
+        }
 
         Password::defaults(fn (): ?Password => app()->isProduction()
             ? Password::min(12)

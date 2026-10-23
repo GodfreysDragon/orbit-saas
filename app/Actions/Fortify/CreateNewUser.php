@@ -52,6 +52,11 @@ class CreateNewUser implements CreatesNewUsers
                 personal: true,
             );
 
+            // The demo sends no real email, so sign-ups couldn't verify.
+            if (config('app.demo')) {
+                $user->markEmailAsVerified();
+            }
+
             if ($invitation?->isFor($user->email)) {
                 // The invitation link was delivered to this address, so it is
                 // already verified. Marking it now (before Fortify fires the

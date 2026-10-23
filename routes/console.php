@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Removes expired organization invitations (see OrganizationInvitation::prunable).
 Schedule::command('model:prune')->daily();
+
+// Public demo deployments start every hour from fresh seed data.
+Schedule::command('demo:reset')->hourly()->when(fn (): bool => (bool) config('app.demo'));

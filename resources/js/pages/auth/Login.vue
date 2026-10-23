@@ -28,6 +28,7 @@ defineProps<{
 
 // One-click logins for the seeded demo accounts (see DatabaseSeeder).
 const showDemoAccounts = usePage().props.pageGuides;
+const isPublicDemo = usePage().props.demo;
 const demoAccounts = [
     { role: 'Owner', email: 'test@example.com' },
     { role: 'Admin', email: 'admin@example.com' },
@@ -139,6 +140,10 @@ function loginAs(email: string) {
         <p class="mt-1 text-muted-foreground">
             Log in as a member of Acme Inc. Each role sees different pages and
             controls.
+        </p>
+        <p v-if="isPublicDemo" class="mt-1 text-muted-foreground">
+            The demo data resets every hour. Billing runs in Stripe test mode:
+            use card 4242 4242 4242 4242.
         </p>
         <div class="mt-3 grid grid-cols-2 gap-2">
             <Button

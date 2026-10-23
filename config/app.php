@@ -30,6 +30,40 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public Demo Mode
+    |--------------------------------------------------------------------------
+    |
+    | For a public deployment where visitors share the seeded accounts. The
+    | demo accounts can't change their credentials, two-factor settings or
+    | delete themselves, new sign-ups skip email verification, and the
+    | scheduler rebuilds the demo data every hour (see demo:reset).
+    |
+    */
+
+    'demo' => (bool) env('APP_DEMO', false),
+
+    'demo_accounts' => [
+        'test@example.com',
+        'admin@example.com',
+        'member@example.com',
+        'viewer@example.com',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Trusted Proxies
+    |--------------------------------------------------------------------------
+    |
+    | Comma-separated proxy addresses, or "*", to trust for X-Forwarded-*
+    | headers. Set it when the app runs behind a load balancer that
+    | terminates TLS, such as Render or Heroku.
+    |
+    */
+
+    'trusted_proxies' => env('TRUSTED_PROXIES'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

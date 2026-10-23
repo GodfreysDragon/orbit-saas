@@ -16,7 +16,7 @@ Tailwind 4, shadcn-vue, Wayfinder typed routes).
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (105 tests), Larastan level 7, Pint, vue-tsc, oxlint                  |
+| Quality  | Pest (113 tests), Larastan level 7, Pint, vue-tsc, oxlint                  |
 
 ## Features
 
@@ -190,6 +190,34 @@ logging.
 - Run a queue worker (`php artisan queue:work`) for invitation emails and webhook listeners.
 - Schedule `php artisan schedule:run` every minute; it prunes expired invitations daily.
 - The Stripe webhook route (`/stripe/*`) is excluded from CSRF checks and verified by its signature.
+- Behind a load balancer that terminates TLS, set `TRUSTED_PROXIES` (`*` or a list of addresses).
+
+### Public demo on Render
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/GodfreysDragon/orbit-saas)
+
+`render.yaml` deploys the `Dockerfile` as one free web service. It runs Apache with mod_php and keeps
+SQLite inside the container, with a sync queue and log mail. `docker/entrypoint.sh` seeds the
+database on boot, caches the config and runs the scheduler alongside Apache. To try the image
+locally:
+
+```bash
+docker build -t orbit-saas .
+docker run -p 8080:8080 -e APP_DEMO=true -e SESSION_DRIVER=cookie orbit-saas
+```
+
+`APP_DEMO=true` turns on demo mode for a deployment where visitors share the seeded accounts:
+
+- The demo accounts can't change their email or password, set up two-factor or passkeys, or
+  delete themselves or Acme Inc (`ProtectDemoAccounts` middleware).
+- New sign-ups are verified straight away, because the demo sends no email.
+- `demo:reset` rebuilds the data every hour. It builds a new SQLite file and swaps it in, so
+  requests never see a half-built database.
+
+Free instances sleep when idle, so the first request can take about a minute. Every boot starts
+from fresh seed data. For billing, enter the Stripe test keys and price IDs when you create the
+Blueprint. Then add a webhook endpoint for `https://<your-app>.onrender.com/stripe/webhook`, using
+the events from `php artisan cashier:webhook`, and set its signing secret as `STRIPE_WEBHOOK_SECRET`.
 
 ## Roadmap
 

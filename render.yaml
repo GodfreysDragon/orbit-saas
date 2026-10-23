@@ -1,0 +1,37 @@
+# Render Blueprint for the public demo (https://render.com/docs/blueprint-spec).
+# One free Docker web service: SQLite inside the container, rebuilt from the
+# seeders on every boot and every hour. Stripe runs in test mode.
+services:
+    - type: web
+      name: orbit-saas
+      runtime: docker
+      plan: free
+      healthCheckPath: /up
+      envVars:
+          - key: APP_DEMO
+            value: 'true'
+          - key: TRUSTED_PROXIES
+            value: '*'
+          - key: SESSION_DRIVER
+            value: cookie
+          - key: CACHE_STORE
+            value: file
+          - key: QUEUE_CONNECTION
+            value: sync
+          - key: MAIL_MAILER
+            value: log
+          # Stripe test-mode settings, entered when the Blueprint is created.
+          - key: STRIPE_KEY
+            sync: false
+          - key: STRIPE_SECRET
+            sync: false
+          - key: STRIPE_WEBHOOK_SECRET
+            sync: false
+          - key: STRIPE_PRICE_PRO_MONTHLY
+            sync: false
+          - key: STRIPE_PRICE_PRO_YEARLY
+            sync: false
+          - key: STRIPE_PRICE_BUSINESS_MONTHLY
+            sync: false
+          - key: STRIPE_PRICE_BUSINESS_YEARLY
+            sync: false

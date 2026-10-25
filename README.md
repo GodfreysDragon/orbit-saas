@@ -10,6 +10,11 @@ A production-shaped starting point for B2B SaaS apps: **organizations** (multi-t
 Built on the official Laravel 13 Vue starter kit (Fortify auth with 2FA and passkeys,
 Tailwind 4, shadcn-vue, Wayfinder typed routes).
 
+**Live demo: [orbit-saas.onrender.com](https://orbit-saas.onrender.com)**. Log in with one click as
+an Owner, Admin, Member or Viewer and subscribe with the `4242 4242 4242 4242` test card. The data
+resets every hour. It runs on a free instance, so the first visit after a quiet spell can take
+about a minute.
+
 ![Dashboard](docs/screenshots/dashboard.png)
 
 |          |                                                                            |

@@ -4,7 +4,8 @@
 FROM php:8.4-apache-bookworm AS base
 
 COPY --from=mlocati/php-extension-installer:2 /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions bcmath intl opcache pcntl zip
+# sockets: required by the Pest browser plugin, a dev dependency the image keeps.
+RUN install-php-extensions bcmath intl opcache pcntl sockets zip
 
 # Build stage: PHP and Node together, because the Wayfinder Vite plugin runs
 # artisan to generate the typed routes during the asset build.

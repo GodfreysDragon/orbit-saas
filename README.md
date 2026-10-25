@@ -70,9 +70,10 @@ Active and the paid invoice appears.
 
 ```
 app/
-├── Actions/Organizations/   CreateOrganization, InviteMember, AcceptInvitation, RemoveMember, ...
+├── Actions/Organizations/   CreateOrganization, InviteMember, AcceptInvitation, TransferOwnership, ...
 ├── Billing/                 Plan (value object over config/billing.php), SubscriptionSummary
-├── Console/Commands/        permissions:sync (enums → Spatie tables, idempotent)
+├── Console/Commands/        permissions:sync (enums → Spatie tables, idempotent), demo:reset
+├── Contracts/               NotTenantAware (opt a queued job out of tenant restoring)
 ├── Enums/                   Permission, OrganizationRole (role → permissions map), ProjectStatus
 ├── Http/Middleware/         EnsureOrganizationContext (resolves tenant, sets Spatie team id)
 ├── Listeners/               RecordSubscriptionActivity (queued, on Cashier WebhookHandled)
@@ -82,7 +83,9 @@ app/
 │   └── Organization (Billable), User, Membership (pivot), Project, Activity, OrganizationInvitation
 ├── Notifications/           OrganizationInvitationNotification (ShouldQueue)
 ├── Policies/                OrganizationPolicy, ProjectPolicy (permissions + plan limits)
-└── Support/CurrentOrganization.php   request-scoped tenant context
+└── Support/
+    ├── CurrentOrganization.php   request-scoped tenant context
+    └── TenantAwareJobs.php       carries the tenant into queued jobs
 ```
 
 ### How a request is scoped
@@ -100,8 +103,11 @@ app/
 5. Shared Inertia props expose the current organization, role, permission list and plan.
    The `usePermissions()` composable uses them to toggle UI. The server re-checks every action.
 
-> **Queued jobs and console commands have no implicit tenant.** Wrap tenant work in
-> `app(CurrentOrganization::class)->runAs($organization, fn () => ...)` or filter by
+> **Queued jobs run in the organization they were dispatched from.** `TenantAwareJobs` stores
+> the tenant in the job payload and restores it before the job runs. A job fails if its
+> organization was deleted in the meantime. Jobs that work across tenants implement
+> `NotTenantAware`. Console commands have no tenant, so wrap tenant work in
+> `app(CurrentOrganization::class)->runAs($organization, function () { ... })` or filter by
 > `organization_id` explicitly.
 
 ### Adding a new tenant-owned resource

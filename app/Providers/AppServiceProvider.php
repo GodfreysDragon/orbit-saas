@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Models\Organization;
 use App\Support\CurrentOrganization;
+use App\Support\TenantAwareJobs;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +23,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Scoped: reset at the start of every request and queued job.
         $this->app->scoped(CurrentOrganization::class);
+        $this->app->singleton(TenantAwareJobs::class);
     }
 
     /**
@@ -30,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureBilling();
+
+        TenantAwareJobs::register($this->app->make(Dispatcher::class));
     }
 
     /**

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Form, Head } from '@inertiajs/vue3';
+import { Form, Head, useForm } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import OrganizationController from '@/actions/App/Http/Controllers/Organizations/OrganizationController';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
@@ -25,8 +26,15 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 import { formatDate } from '@/lib/format';
-import { edit } from '@/routes/organization';
+import { edit, transfer } from '@/routes/organization';
 
 defineOptions({
     layout: {
@@ -34,7 +42,9 @@ defineOptions({
     },
 });
 
-defineProps<{
+type Person = { id: number; name: string; email: string };
+
+const props = defineProps<{
     organization: {
         id: number;
         name: string;
@@ -42,9 +52,32 @@ defineProps<{
         personal: boolean;
         created_at: string;
     };
-    owner: { id: number; name: string; email: string };
-    can: { update: boolean; delete: boolean; deleteReason: string | null };
+    owner: Person;
+    admins: Person[];
+    can: {
+        update: boolean;
+        delete: boolean;
+        deleteReason: string | null;
+        transfer: boolean;
+    };
 }>();
+
+const transferOpen = ref(false);
+const transferForm = useForm({ member: '', password: '' });
+const transferTo = computed(() =>
+    props.admins.find((admin) => String(admin.id) === transferForm.member),
+);
+
+function submitTransfer() {
+    transferForm.put(transfer().url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            transferOpen.value = false;
+            transferForm.reset();
+        },
+        onFinish: () => transferForm.reset('password'),
+    });
+}
 </script>
 
 <template>
@@ -58,9 +91,10 @@ defineProps<{
 
         <PageGuide
             id="organization-settings"
-            summary="Rename the organization, or delete it along with all of its projects, members and history. Your personal workspace can't be deleted."
+            summary="Rename the organization, hand it to one of its admins, or delete it along with all of its projects, members and history. Your personal workspace can't be transferred or deleted."
             :details="[
-                'Renaming needs the `organization.update` permission. Deleting is Owner-only.',
+                'Renaming needs the `organization.update` permission. Transferring and deleting are Owner-only.',
+                'Transferring runs the `TransferOwnership` action: the admin becomes the owner, you become an admin, and the Stripe customer email follows the new owner.',
                 'Deleting runs the `DeleteOrganization` action, and foreign keys cascade so no orphaned tenant data is left behind.',
                 'Members who had this organization selected are moved to another one they belong to.',
             ]"
@@ -110,6 +144,108 @@ defineProps<{
                             Only owners and admins can change these settings.
                         </p>
                     </Form>
+                </CardContent>
+            </Card>
+
+            <Card v-if="can.transfer" data-test="transfer-ownership">
+                <CardHeader>
+                    <CardTitle>Transfer ownership</CardTitle>
+                    <CardDescription>
+                        Make an admin the owner. They get billing and deletion
+                        rights, and you stay on as an admin.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p
+                        v-if="admins.length === 0"
+                        class="text-sm text-muted-foreground"
+                    >
+                        Promote a member to admin on the Members page first.
+                    </p>
+                    <form
+                        v-else
+                        class="space-y-4"
+                        @submit.prevent="transferOpen = true"
+                    >
+                        <div class="grid gap-2">
+                            <Label for="transfer-member">New owner</Label>
+                            <Select v-model="transferForm.member">
+                                <SelectTrigger
+                                    id="transfer-member"
+                                    class="w-full"
+                                >
+                                    <SelectValue
+                                        placeholder="Choose an admin"
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem
+                                        v-for="admin in admins"
+                                        :key="admin.id"
+                                        :value="String(admin.id)"
+                                    >
+                                        {{ admin.name }} ({{ admin.email }})
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <InputError :message="transferForm.errors.member" />
+                        </div>
+                        <Button
+                            type="submit"
+                            variant="outline"
+                            :disabled="!transferTo"
+                            >Transfer ownership</Button
+                        >
+                    </form>
+
+                    <Dialog v-model:open="transferOpen">
+                        <DialogContent>
+                            <form
+                                class="space-y-6"
+                                @submit.prevent="submitTransfer"
+                            >
+                                <DialogHeader>
+                                    <DialogTitle
+                                        >Make {{ transferTo?.name }} the
+                                        owner?</DialogTitle
+                                    >
+                                    <DialogDescription>
+                                        You'll become an admin of
+                                        {{ organization.name }} and lose access
+                                        to billing. Enter your password to
+                                        confirm.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div class="grid gap-2">
+                                    <Label
+                                        for="transfer-password"
+                                        class="sr-only"
+                                        >Password</Label
+                                    >
+                                    <PasswordInput
+                                        id="transfer-password"
+                                        v-model="transferForm.password"
+                                        placeholder="Password"
+                                    />
+                                    <InputError
+                                        :message="transferForm.errors.password"
+                                    />
+                                </div>
+                                <DialogFooter class="gap-2">
+                                    <DialogClose as-child>
+                                        <Button variant="secondary"
+                                            >Cancel</Button
+                                        >
+                                    </DialogClose>
+                                    <Button
+                                        type="submit"
+                                        :disabled="transferForm.processing"
+                                        >Transfer ownership</Button
+                                    >
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
                 </CardContent>
             </Card>
 

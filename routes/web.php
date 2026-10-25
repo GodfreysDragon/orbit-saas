@@ -41,6 +41,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('settings', [OrganizationController::class, 'edit'])->name('organization.edit');
             Route::patch('settings', [OrganizationController::class, 'update'])->name('organization.update');
             Route::delete('settings', [OrganizationController::class, 'destroy'])->name('organization.destroy');
+            Route::put('owner', [OrganizationController::class, 'transfer'])
+                ->middleware('throttle:6,1')
+                ->name('organization.transfer');
 
             Route::get('members', [MemberController::class, 'index'])->name('members.index');
             Route::patch('members/{member}', [MemberController::class, 'update'])->name('members.update');

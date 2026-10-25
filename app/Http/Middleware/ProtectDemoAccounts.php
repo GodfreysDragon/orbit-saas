@@ -28,6 +28,7 @@ class ProtectDemoAccounts
         'passkey.store',
         'passkey.destroy',
         'organization.destroy',
+        'organization.transfer',
     ];
 
     /**

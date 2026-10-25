@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\OrganizationRole;
 use App\Enums\Permission;
 use App\Models\Organization;
 use App\Models\User;
@@ -28,6 +29,40 @@ class OrganizationPolicy
         return $organization->personal
             ? Response::deny('Your personal organization cannot be deleted.')
             : Response::allow();
+    }
+
+    /**
+     * Whether the user may hand this organization to someone else at all.
+     */
+    public function transferOwnership(User $user, Organization $organization): Response
+    {
+        if (! $organization->isOwnedBy($user)) {
+            return Response::deny('Only the owner can transfer ownership.');
+        }
+
+        return $organization->personal
+            ? Response::deny('Your personal organization cannot be transferred.')
+            : Response::allow();
+    }
+
+    /**
+     * Ownership goes to an existing admin, who already manages the organization.
+     */
+    public function transferOwnershipTo(User $user, Organization $organization, User $member): Response
+    {
+        $allowed = $this->transferOwnership($user, $organization);
+
+        if ($allowed->denied()) {
+            return $allowed;
+        }
+
+        if ($member->is($user)) {
+            return Response::deny('You already own this organization.');
+        }
+
+        return $member->roleIn($organization) === OrganizationRole::Admin
+            ? Response::allow()
+            : Response::deny('Ownership can only be transferred to an admin.');
     }
 
     public function viewMembers(User $user, Organization $organization): bool

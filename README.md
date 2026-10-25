@@ -213,8 +213,8 @@ docker run -p 8080:8080 -e APP_DEMO=true -e SESSION_DRIVER=cookie orbit-saas
 
 `APP_DEMO=true` turns on demo mode for a deployment where visitors share the seeded accounts:
 
-- The demo accounts can't change their email or password, set up two-factor or passkeys, or
-  delete themselves or Acme Inc (`ProtectDemoAccounts` middleware).
+- The demo accounts can't change their email or password, set up two-factor or passkeys,
+  delete themselves, or transfer or delete Acme Inc (`ProtectDemoAccounts` middleware).
 - New sign-ups are verified straight away, because the demo sends no email.
 - `demo:reset` rebuilds the data every hour. It builds a new SQLite file and swaps it in, so
   requests never see a half-built database.

@@ -36,6 +36,10 @@ class EnsureOrganizationContext
 
         $this->current->set($organization);
 
+        // Roles loaded earlier belong to another team (a long-lived user
+        // instance, e.g. under Octane), so reload them for this tenant.
+        $user->unsetRelation('roles')->unsetRelation('permissions');
+
         return $next($request);
     }
 }

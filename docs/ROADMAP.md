@@ -9,22 +9,22 @@ architecture are in the [README](../README.md).
   cancel and resume, the customer portal and invoices were run end to end against a Stripe
   sandbox. The automated tests cover plan resolution, trials, limits and webhook logging with
   simulated subscription rows.
-- **Queued jobs and console commands have no implicit tenant.** They must call
-  `CurrentOrganization::runAs()` or filter by `organization_id` themselves.
-- **Ownership can't be transferred.** The owner can't leave or be removed, and there is no
-  transfer flow yet.
+- **Console commands have no implicit tenant.** They must call `CurrentOrganization::runAs()`
+  or filter by `organization_id` themselves. Queued jobs get their tenant automatically.
+- **Failed payments are verified with simulated subscriptions.** The past-due banner and audit
+  entry are covered by tests, not yet by a real failed renewal against Stripe.
 - **Mail goes to the log by default** (`MAIL_MAILER=log`). Invitation emails need a queue worker;
   `composer run dev` starts one.
 
-## Next up
+## Done
 
-- [ ] Handle failed payments (`past_due`): show a dashboard banner that links to the portal, and
-      decide whether limits drop to Free during dunning.
-- [ ] Add an ownership transfer flow (owner → existing admin), with a policy and tests.
-- [ ] Add a `TenantAware` job base class or middleware that restores `CurrentOrganization`
-      inside queued jobs.
-- [ ] Add browser tests (Pest browser plugin) for the org switcher, invite and accept, and the
-      billing UI.
+- [x] Handle failed payments (`past_due`): the organization keeps its plan while Stripe retries,
+      and a banner links billing managers to the portal.
+- [x] Transfer ownership to an existing admin, confirmed with the owner's password.
+- [x] Restore the tenant inside queued jobs (`TenantAwareJobs`, with a `NotTenantAware` opt-out).
+- [x] Browser tests (Pest browser plugin) for the organization switcher, invite and sign-up,
+      ownership transfer and the billing UI.
+- [x] Deployment config: a Docker image and a Render Blueprint for the public demo.
 
 ## Later
 
@@ -40,5 +40,5 @@ architecture are in the [README](../README.md).
       resolver.
 - [ ] Add usage-based (metered) billing using Cashier meters.
 - [ ] Localize UI strings (`lang/` files).
-- [ ] Add deployment config (Laravel Cloud / Forge / Docker) with queue worker and scheduler
-      setup.
+- [ ] Add a separate queue worker to the deployment for production use (the demo uses the
+      sync queue).

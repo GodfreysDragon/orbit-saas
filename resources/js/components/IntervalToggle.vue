@@ -19,6 +19,7 @@ const interval = defineModel<'monthly' | 'yearly'>({ required: true });
                     : 'text-muted-foreground hover:text-foreground'
             "
             :aria-pressed="interval === option"
+            :data-test="`interval-${option}`"
             @click="interval = option"
         >
             {{ option === 'monthly' ? 'Monthly' : 'Yearly' }}

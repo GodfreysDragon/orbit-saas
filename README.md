@@ -21,7 +21,7 @@ about a minute.
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (113 tests), Larastan level 7, Pint, vue-tsc, oxlint                  |
+| Quality  | Pest (138 tests, 8 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
 
 ## Features
 
@@ -182,7 +182,9 @@ and the organization owner's email is used as the Stripe customer email.
 ## Testing and quality
 
 ```bash
-php artisan test            # Pest feature tests
+npx playwright install chromium   # once, for the browser tests
+npm run build                     # browser tests use the built assets
+php artisan test            # Pest feature and browser tests
 composer run types:check    # Larastan level 7
 composer run lint           # Pint
 npm run check               # oxlint + formatting
@@ -191,9 +193,11 @@ npm run types:check         # vue-tsc
 
 The test suite covers tenant isolation (including cross-tenant route binding), per-organization
 role resolution, the full permission matrix, the invitation lifecycle and seat limits, member
-management rules (the owner can't be removed, users can't change their own role), organization
-deletion, plan resolution from Stripe prices, plan-limit enforcement and webhook activity
-logging.
+management rules (the owner can't be removed, users can't change their own role), ownership
+transfer, organization deletion, plan resolution from Stripe prices, plan-limit enforcement,
+past-due handling, webhook activity logging, tenant restoring in queued jobs and demo mode.
+Browser tests (Pest's Playwright plugin, in `tests/Browser`) drive the real Vue app through the
+organization switcher, invite and sign-up, ownership transfer and the billing UI.
 
 ## Deployment notes
 

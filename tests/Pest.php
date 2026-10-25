@@ -22,6 +22,13 @@ pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
 
+// Browser tests drive the real Vue app in Chromium (Playwright), so they
+// need the built assets: run `npm run build` first.
+pest()->extend(TestCase::class)
+    ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => $this->withVite())
+    ->in('Browser');
+
 /*
 |--------------------------------------------------------------------------
 | Functions

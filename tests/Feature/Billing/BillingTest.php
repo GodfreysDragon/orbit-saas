@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\OrganizationRole;
 use App\Listeners\RecordSubscriptionActivity;
 use App\Models\Activity;
 use App\Models\Organization;
@@ -131,4 +132,45 @@ test('subscription webhooks are recorded in the activity log', function () {
 
     expect($activity->event)->toBe('billing.subscription.created')
         ->and($activity->description)->toBe('Subscribed to the Pro plan');
+});
+
+test('past due subscriptions keep the paid plan while Stripe retries the payment', function () {
+    [$organization, $owner] = organizationWithUser(trial: false);
+    subscribe($organization, 'price_pro_monthly', 'past_due');
+
+    expect($organization->fresh()->plan()->key)->toBe('pro');
+
+    $this->actingAs($owner)
+        ->get(route('dashboard'))
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.organization.billingStatus', 'past_due')
+            ->where('auth.organization.plan.key', 'pro'));
+});
+
+test('members without billing access also see that the organization is past due', function () {
+    [$organization, $viewer] = organizationWithUser(OrganizationRole::Viewer, trial: false);
+    subscribe($organization, 'price_pro_monthly', 'past_due');
+
+    $this->actingAs($viewer)
+        ->get(route('projects.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('auth.organization.billingStatus', 'past_due')
+            ->where('auth.organization.permissions', fn ($permissions) => ! collect($permissions)->contains('billing.manage')));
+});
+
+test('a failed renewal is recorded in the activity log', function () {
+    $organization = Organization::factory()->create(['stripe_id' => 'cus_456']);
+
+    (new RecordSubscriptionActivity)->handle(new WebhookHandled([
+        'type' => 'customer.subscription.updated',
+        'data' => ['object' => [
+            'id' => 'sub_456',
+            'customer' => 'cus_456',
+            'status' => 'past_due',
+            'items' => ['data' => [['price' => ['id' => 'price_pro_monthly']]]],
+        ]],
+    ]));
+
+    expect(Activity::withoutGlobalScopes()->where('organization_id', $organization->id)->sole()->description)
+        ->toBe('Payment failed: the Pro plan is past due');
 });

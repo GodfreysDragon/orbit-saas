@@ -63,9 +63,15 @@ class AppServiceProvider extends ServiceProvider
 
     /**
      * Organizations, not users, are the Stripe customers.
+     *
+     * A failed renewal makes the subscription past_due while Stripe retries
+     * the payment. The organization keeps its paid plan during those retries
+     * and the app shows a banner. If they all fail, Stripe cancels the
+     * subscription and the organization drops to Free.
      */
     protected function configureBilling(): void
     {
         Cashier::useCustomerModel(Organization::class);
+        Cashier::keepPastDueSubscriptionsActive();
     }
 }

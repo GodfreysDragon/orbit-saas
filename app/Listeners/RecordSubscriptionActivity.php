@@ -32,6 +32,10 @@ class RecordSubscriptionActivity implements ShouldQueue
 
         $object = $event->payload['data']['object'];
 
+        if ($type === 'customer.subscription.updated' && ($object['status'] ?? null) === 'past_due') {
+            $description = 'Payment failed: the :plan plan is past due';
+        }
+
         /** @var Organization|null $organization */
         $organization = Cashier::findBillable($object['customer'] ?? null);
 

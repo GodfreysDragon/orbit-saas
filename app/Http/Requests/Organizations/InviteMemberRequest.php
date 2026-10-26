@@ -39,19 +39,9 @@ class InviteMemberRequest extends FormRequest
                 $organization = app(CurrentOrganization::class)->getOrFail();
                 $email = Str::lower($this->string('email')->toString());
 
+                // The seat limit is checked by InviteMember, under the organization's lock.
                 if ($organization->users()->where('email', $email)->exists()) {
                     $validator->errors()->add('email', 'This person is already a member of the organization.');
-
-                    return;
-                }
-
-                $alreadyInvited = $organization->invitations()->where('email', $email)->exists();
-
-                if (! $alreadyInvited && ! $organization->canAddMembers()) {
-                    $validator->errors()->add(
-                        'email',
-                        "You've used all seats on the {$organization->plan()->name} plan. Upgrade to invite more members.",
-                    );
                 }
             },
         ];

@@ -30,6 +30,8 @@ architecture are in the [README](../README.md).
       nothing unless they opt in with `acrossOrganizations()`.
 - [x] Store invitation tokens as SHA-256 hashes, so a database leak doesn't expose working links.
 - [x] Record each Stripe webhook event once in the audit log, even when Stripe delivers it again.
+- [x] Check seat and project limits under a lock on the organization, in the same transaction as
+      the insert (SQLite transactions are `IMMEDIATE`, so they serialize too).
 
 ## Later
 

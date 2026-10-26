@@ -21,7 +21,7 @@ about a minute.
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (146 tests, 8 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
+| Quality  | Pest (151 tests, 8 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
 
 ## Features
 
@@ -40,8 +40,9 @@ about a minute.
 - **Billing**: Free, Pro and Business plans defined in `config/billing.php`. Includes a card-less
   14-day trial, Stripe Checkout, plan swaps, cancel and resume during the grace period, the Stripe
   customer portal, and invoices (loaded as a deferred prop).
-- **Plan limits**: seat and project limits are enforced in policies and validation, and the UI
-  shows an upgrade prompt.
+- **Plan limits**: seat and project limits are enforced in policies and actions, and the UI shows
+  an upgrade prompt. Each check runs in the same transaction as the insert it guards, under a lock
+  on the organization's row, so two requests at once can't both take the last free slot.
 - **Audit log**: an activity feed written by model observers, actions and a queued Cashier webhook
   listener.
 - **Dashboard**: KPI tiles, a 14-day activity chart, usage meters, recent projects, an onboarding

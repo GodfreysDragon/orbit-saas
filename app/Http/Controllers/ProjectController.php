@@ -59,11 +59,14 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function store(ProjectRequest $request): RedirectResponse
+    public function store(ProjectRequest $request, CurrentOrganization $current): RedirectResponse
     {
-        Gate::authorize('create', Project::class);
+        // The policy checks the project limit, so it runs under the lock with the insert.
+        $current->getOrFail()->withLock(function () use ($request): void {
+            Gate::authorize('create', Project::class);
 
-        Project::create($request->validated());
+            Project::create($request->validated());
+        });
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Project created.')]);
 

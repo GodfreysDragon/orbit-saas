@@ -25,7 +25,17 @@ class RecordTenantJob implements ShouldQueue
     }
 }
 
-class RecordAcrossTenantsJob extends RecordTenantJob implements NotTenantAware {}
+class RecordAcrossTenantsJob implements NotTenantAware, ShouldQueue
+{
+    use Dispatchable, Queueable;
+
+    public function handle(CurrentOrganization $current): void
+    {
+        Cache::put('job.tenant', $current->id());
+        Cache::put('job.projects', Project::count());
+        Cache::put('job.all_projects', Project::acrossOrganizations()->count());
+    }
+}
 
 beforeEach(function () {
     $this->acme = Organization::factory()->create();
@@ -73,13 +83,13 @@ test('each job gets its own tenant on a long-running worker', function () {
         ->and(Cache::get('job.projects'))->toBe(5);
 });
 
-test('jobs dispatched without a tenant run without one', function () {
+test('jobs dispatched without a tenant run without one and see no tenant rows', function () {
     RecordTenantJob::dispatch()->onConnection('database');
 
     workOneJob();
 
     expect(Cache::get('job.tenant'))->toBeNull()
-        ->and(Cache::get('job.projects'))->toBe(7);
+        ->and(Cache::get('job.projects'))->toBe(0);
 });
 
 test('NotTenantAware jobs ignore the tenant they were dispatched from', function () {
@@ -90,7 +100,8 @@ test('NotTenantAware jobs ignore the tenant they were dispatched from', function
     workOneJob();
 
     expect(Cache::get('job.tenant'))->toBeNull()
-        ->and(Cache::get('job.projects'))->toBe(7);
+        ->and(Cache::get('job.projects'))->toBe(0)
+        ->and(Cache::get('job.all_projects'))->toBe(7);
 });
 
 test('jobs fail when their organization was deleted after dispatch', function () {

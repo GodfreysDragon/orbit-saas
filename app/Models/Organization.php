@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Billing\Plan;
+use App\Models\Scopes\OrganizationScope;
 use Carbon\CarbonImmutable;
 use Database\Factories\OrganizationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -84,11 +85,15 @@ class Organization extends Model
     }
 
     /**
+     * Relations to tenant-owned models are already limited to this
+     * organization by their foreign key, so they work whichever
+     * organization is current (or none).
+     *
      * @return HasMany<Project, $this>
      */
     public function projects(): HasMany
     {
-        return $this->hasMany(Project::class);
+        return $this->hasMany(Project::class)->withoutGlobalScope(OrganizationScope::class);
     }
 
     /**
@@ -96,7 +101,7 @@ class Organization extends Model
      */
     public function activities(): HasMany
     {
-        return $this->hasMany(Activity::class);
+        return $this->hasMany(Activity::class)->withoutGlobalScope(OrganizationScope::class);
     }
 
     public function hasUser(User $user): bool

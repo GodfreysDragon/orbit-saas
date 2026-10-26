@@ -73,7 +73,7 @@ class DatabaseSeeder extends Seeder
      */
     private function backfillActivity(Organization $organization, array $users): void
     {
-        $projects = Project::pluck('name')->all();
+        $projects = $organization->projects()->pluck('name')->all();
 
         foreach (range(0, 60) as $i) {
             $user = fake()->randomElement($users);

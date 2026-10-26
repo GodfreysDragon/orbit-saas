@@ -69,12 +69,13 @@ class FortifyServiceProvider extends ServiceProvider
         ]));
 
         Fortify::registerView(function (Request $request) {
-            $invitation = OrganizationInvitation::findPending($request->query('invitation'));
+            $token = $request->string('invitation')->toString();
+            $invitation = OrganizationInvitation::findPending($token);
 
             return Inertia::render('auth/Register', [
                 'passwordRules' => Password::defaults()->toPasswordRulesString(),
                 'invitation' => $invitation ? [
-                    'token' => $invitation->token,
+                    'token' => $token,
                     'email' => $invitation->email,
                     'organization' => $invitation->organization->name,
                 ] : null,

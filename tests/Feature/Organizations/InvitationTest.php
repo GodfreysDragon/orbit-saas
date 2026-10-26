@@ -1,5 +1,6 @@
 <?php
 
+use App\Actions\Organizations\InviteMember;
 use App\Enums\OrganizationRole;
 use App\Models\OrganizationInvitation;
 use App\Models\User;
@@ -74,12 +75,12 @@ test('invitees can accept and join with the invited role', function () {
     $invitation = $organization->invitations()->create(['email' => 'invitee@example.com', 'role' => OrganizationRole::Admin]);
 
     $this->actingAs($invitee)
-        ->get(route('invitations.show', $invitation->token))
+        ->get(route('invitations.show', $invitation->plainToken))
         ->assertOk()
         ->assertInertia(fn ($page) => $page->component('invitations/Show')->where('emailMatches', true));
 
     $this->actingAs($invitee)
-        ->post(route('invitations.accept', $invitation->token))
+        ->post(route('invitations.accept', $invitation->plainToken))
         ->assertRedirect(route('dashboard'));
 
     expect($organization->hasUser($invitee))->toBeTrue()
@@ -94,7 +95,7 @@ test('invitations can only be accepted by the invited email address', function (
     $invitation = $organization->invitations()->create(['email' => 'someone@example.com', 'role' => OrganizationRole::Member]);
 
     $this->actingAs($intruder)
-        ->post(route('invitations.accept', $invitation->token))
+        ->post(route('invitations.accept', $invitation->plainToken))
         ->assertForbidden();
 
     expect($organization->hasUser($intruder))->toBeFalse();
@@ -110,7 +111,7 @@ test('expired invitations cannot be accepted', function () {
     ]);
 
     $this->actingAs($invitee)
-        ->post(route('invitations.accept', $invitation->token))
+        ->post(route('invitations.accept', $invitation->plainToken))
         ->assertStatus(410);
 });
 
@@ -120,7 +121,7 @@ test('accepting an invitation verifies the invited email address', function () {
     $invitation = $organization->invitations()->create(['email' => $invitee->email, 'role' => OrganizationRole::Member]);
 
     $this->actingAs($invitee)
-        ->post(route('invitations.accept', $invitation->token))
+        ->post(route('invitations.accept', $invitation->plainToken))
         ->assertRedirect(route('dashboard'));
 
     expect($invitee->fresh()->hasVerifiedEmail())->toBeTrue()
@@ -133,7 +134,7 @@ test('unverified users cannot accept invitations sent to another address', funct
     $invitation = $organization->invitations()->create(['email' => 'someone@example.com', 'role' => OrganizationRole::Member]);
 
     $this->actingAs($intruder)
-        ->post(route('invitations.accept', $invitation->token))
+        ->post(route('invitations.accept', $invitation->plainToken))
         ->assertForbidden();
 
     expect($intruder->fresh()->hasVerifiedEmail())->toBeFalse();
@@ -143,9 +144,9 @@ test('guests see the invitation and return to it after logging in', function () 
     [$organization] = organizationWithUser();
     $invitation = $organization->invitations()->create(['email' => 'new@example.com', 'role' => OrganizationRole::Member]);
 
-    $this->get(route('invitations.show', $invitation->token))
+    $this->get(route('invitations.show', $invitation->plainToken))
         ->assertOk()
-        ->assertSessionHas('url.intended', route('invitations.show', $invitation->token))
+        ->assertSessionHas('url.intended', route('invitations.show', $invitation->plainToken))
         ->assertInertia(fn ($page) => $page
             ->component('auth/Invitation')
             ->where('invitation.organization.name', $organization->name)
@@ -156,7 +157,7 @@ test('the sign-up form is prefilled from an invitation', function () {
     [$organization] = organizationWithUser();
     $invitation = $organization->invitations()->create(['email' => 'new@example.com', 'role' => OrganizationRole::Member]);
 
-    $this->get(route('register', ['invitation' => $invitation->token]))
+    $this->get(route('register', ['invitation' => $invitation->plainToken]))
         ->assertInertia(fn ($page) => $page
             ->component('auth/Register')
             ->where('invitation.email', 'new@example.com')
@@ -167,13 +168,13 @@ test('signing up from an invitation verifies the email and joins the organizatio
     [$organization] = organizationWithUser();
     $invitation = $organization->invitations()->create(['email' => 'new@example.com', 'role' => OrganizationRole::Admin]);
 
-    $this->withSession(['url.intended' => route('invitations.show', $invitation->token)])
+    $this->withSession(['url.intended' => route('invitations.show', $invitation->plainToken)])
         ->post(route('register.store'), [
             'name' => 'New Hire',
             'email' => 'New@Example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
-            'invitation' => $invitation->token,
+            'invitation' => $invitation->plainToken,
         ])
         ->assertRedirect(route('dashboard'));
 
@@ -197,7 +198,7 @@ test('signing up with someone else\'s invitation does not verify or join', funct
         'email' => 'intruder@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
-        'invitation' => $invitation->token,
+        'invitation' => $invitation->plainToken,
     ]);
 
     $user = User::where('email', 'intruder@example.com')->sole();
@@ -222,7 +223,7 @@ test('expired invitations are ignored at sign-up', function () {
         'email' => 'late@example.com',
         'password' => 'password',
         'password_confirmation' => 'password',
-        'invitation' => $invitation->token,
+        'invitation' => $invitation->plainToken,
     ]);
 
     $user = User::where('email', 'late@example.com')->sole();
@@ -251,4 +252,57 @@ test('expired invitations are pruned', function () {
     $this->artisan('model:prune', ['--model' => [OrganizationInvitation::class]]);
 
     expect(OrganizationInvitation::pluck('email')->all())->toBe(['new@example.com']);
+});
+
+test('only a hash of the invitation token is stored', function () {
+    [$organization, $owner] = organizationWithUser();
+
+    $this->actingAs($owner)
+        ->post(route('organization.invitations.store'), ['email' => 'new@example.com', 'role' => 'member']);
+
+    $token = null;
+    Notification::assertSentOnDemand(
+        OrganizationInvitationNotification::class,
+        function (OrganizationInvitationNotification $notification) use (&$token) {
+            $token = $notification->token;
+
+            return true;
+        },
+    );
+
+    $stored = $organization->invitations()->sole()->token;
+
+    expect($stored)->not->toBe($token)
+        ->and($stored)->toBe(hash('sha256', $token));
+
+    auth()->logout();
+
+    $this->get(route('invitations.show', $token))->assertOk();
+    $this->get(route('invitations.show', $stored))->assertNotFound();
+});
+
+test('inviting the same address again replaces the old link', function () {
+    [$organization, $owner] = organizationWithUser();
+    $first = app(InviteMember::class)->handle($organization, $owner, 'new@example.com', OrganizationRole::Member);
+    $second = app(InviteMember::class)->handle($organization, $owner, 'new@example.com', OrganizationRole::Admin);
+
+    expect($organization->invitations()->count())->toBe(1);
+
+    $this->get(route('invitations.show', $first->plainToken))->assertNotFound();
+    $this->get(route('invitations.show', $second->plainToken))->assertOk();
+});
+
+test('the migration hashes tokens that were stored in plain text', function () {
+    [$organization] = organizationWithUser();
+    $plain = OrganizationInvitation::newToken();
+    $invitation = $organization->invitations()->create([
+        'email' => 'old@example.com',
+        'role' => OrganizationRole::Member,
+        'token' => $plain,
+    ]);
+
+    (require database_path('migrations/2026_10_26_000001_hash_organization_invitation_tokens.php'))->up();
+
+    expect($invitation->fresh()->token)->toBe(hash('sha256', $plain))
+        ->and(OrganizationInvitation::findPending($plain)?->is($invitation))->toBeTrue();
 });

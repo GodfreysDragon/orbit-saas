@@ -21,7 +21,7 @@ about a minute.
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (138 tests, 8 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
+| Quality  | Pest (141 tests, 8 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
 
 ## Features
 
@@ -106,9 +106,14 @@ app/
 > **Queued jobs run in the organization they were dispatched from.** `TenantAwareJobs` stores
 > the tenant in the job payload and restores it before the job runs. A job fails if its
 > organization was deleted in the meantime. Jobs that work across tenants implement
-> `NotTenantAware`. Console commands have no tenant, so wrap tenant work in
-> `app(CurrentOrganization::class)->runAs($organization, function () { ... })` or filter by
-> `organization_id` explicitly.
+> `NotTenantAware`.
+>
+> **Without a tenant, tenant-owned models return nothing.** The organization scope fails closed,
+> so a console command or a `NotTenantAware` job that forgets the tenant sees no rows instead of
+> every organization's. Wrap tenant work in
+> `app(CurrentOrganization::class)->runAs($organization, function () { ... })`, go through the
+> organization's relations (`$organization->projects()`), or read across tenants explicitly with
+> `Project::acrossOrganizations()`.
 
 ### Adding a new tenant-owned resource
 

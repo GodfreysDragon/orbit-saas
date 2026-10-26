@@ -2,9 +2,11 @@
 
 use App\Enums\OrganizationRole;
 use App\Enums\Permission;
+use App\Models\Activity;
 use App\Models\Organization;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\CurrentOrganization;
 use Inertia\Testing\AssertableInertia as Assert;
 
 test('projects are only listed for the current organization', function () {
@@ -100,4 +102,36 @@ test('roles are evaluated per organization', function () {
         ->and($user->roleIn($viewerOrg))->toBe(OrganizationRole::Viewer)
         ->and($user->hasPermissionIn($ownedOrg, Permission::DeleteProjects))->toBeTrue()
         ->and($user->hasPermissionIn($viewerOrg, Permission::DeleteProjects))->toBeFalse();
+});
+
+test('without a current organization tenant queries match nothing', function () {
+    Project::factory()->count(2)->for(Organization::factory())->create();
+    Activity::record('test.event', 'Recorded', organization: Organization::factory()->create());
+
+    expect(app(CurrentOrganization::class)->check())->toBeFalse()
+        ->and(Project::count())->toBe(0)
+        ->and(Project::first())->toBeNull()
+        ->and(Activity::count())->toBe(0);
+});
+
+test('reading across organizations has to be asked for explicitly', function () {
+    Project::factory()->count(2)->for(Organization::factory())->create();
+    Project::factory()->count(3)->for(Organization::factory())->create();
+
+    expect(Project::acrossOrganizations()->count())->toBe(5);
+});
+
+test('an organization\'s relations return its own rows whichever tenant is current', function () {
+    $acme = Organization::factory()->create();
+    $globex = Organization::factory()->create();
+    Project::factory()->count(2)->for($acme)->create();
+    Project::factory()->count(3)->for($globex)->create();
+
+    app(CurrentOrganization::class)->runAs($acme, function () use ($acme, $globex) {
+        expect(Project::count())->toBe(2)
+            ->and($acme->projects()->count())->toBe(2)
+            ->and($globex->projects()->count())->toBe(3);
+    });
+
+    expect($globex->projects()->count())->toBe(3);
 });

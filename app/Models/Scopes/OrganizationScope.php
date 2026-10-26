@@ -12,8 +12,10 @@ use Illuminate\Database\Eloquent\Scope;
  *
  * Within an HTTP request the tenant is always resolved by the `organization`
  * middleware, and queued jobs get the tenant they were dispatched from (see
- * TenantAwareJobs). Console commands have no implicit tenant, so they must
- * either call CurrentOrganization::runAs() or filter explicitly.
+ * TenantAwareJobs). Without a tenant (console commands, NotTenantAware jobs)
+ * the scope fails closed and matches nothing: call
+ * CurrentOrganization::runAs(), or opt in to every tenant's rows explicitly
+ * with Model::acrossOrganizations().
  *
  * @template TModel of Model
  *
@@ -29,8 +31,12 @@ class OrganizationScope implements Scope
     {
         $organizationId = app(CurrentOrganization::class)->id();
 
-        if ($organizationId !== null) {
-            $builder->where($model->qualifyColumn('organization_id'), $organizationId);
+        if ($organizationId === null) {
+            $builder->whereRaw('0 = 1');
+
+            return;
         }
+
+        $builder->where($model->qualifyColumn('organization_id'), $organizationId);
     }
 }

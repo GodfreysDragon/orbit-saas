@@ -9,8 +9,9 @@ architecture are in the [README](../README.md).
   cancel and resume, the customer portal and invoices were run end to end against a Stripe
   sandbox. The automated tests cover plan resolution, trials, limits and webhook logging with
   simulated subscription rows.
-- **Console commands have no implicit tenant.** They must call `CurrentOrganization::runAs()`
-  or filter by `organization_id` themselves. Queued jobs get their tenant automatically.
+- **Console commands have no implicit tenant.** Tenant-owned queries return nothing until they
+  call `CurrentOrganization::runAs()` or opt in with `acrossOrganizations()`. Queued jobs get their
+  tenant automatically.
 - **Failed payments are verified with simulated subscriptions.** The past-due banner and audit
   entry are covered by tests, not yet by a real failed renewal against Stripe.
 - **Mail goes to the log by default** (`MAIL_MAILER=log`). Invitation emails need a queue worker;
@@ -25,6 +26,8 @@ architecture are in the [README](../README.md).
 - [x] Browser tests (Pest browser plugin) for the organization switcher, invite and sign-up,
       ownership transfer and the billing UI.
 - [x] Deployment config: a Docker image and a Render Blueprint for the public demo.
+- [x] Make the organization scope fail closed: without a tenant, tenant-owned queries match
+      nothing unless they opt in with `acrossOrganizations()`.
 
 ## Later
 

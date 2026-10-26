@@ -28,6 +28,8 @@ architecture are in the [README](../README.md).
 - [x] Deployment config: a Docker image and a Render Blueprint for the public demo.
 - [x] Make the organization scope fail closed: without a tenant, tenant-owned queries match
       nothing unless they opt in with `acrossOrganizations()`.
+- [x] Store invitation tokens as SHA-256 hashes, so a database leak doesn't expose working links.
+- [x] Record each Stripe webhook event once in the audit log, even when Stripe delivers it again.
 
 ## Later
 

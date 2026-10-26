@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Cashier\Billable;
 
@@ -152,6 +153,25 @@ class Organization extends Model
         $limit = $this->plan()->maxProjects;
 
         return $limit === null || $this->projects()->count() < $limit;
+    }
+
+    /**
+     * Run the callback in a transaction that holds a lock on this
+     * organization's row. Plan-limit checks and the inserts they guard go
+     * inside, so two requests can't both take the last free seat or project.
+     *
+     * @template TReturn
+     *
+     * @param  callable(): TReturn  $callback
+     * @return TReturn
+     */
+    public function withLock(callable $callback): mixed
+    {
+        return DB::transaction(function () use ($callback): mixed {
+            static::query()->whereKey($this->getKey())->lockForUpdate()->sole();
+
+            return $callback();
+        });
     }
 
     /**

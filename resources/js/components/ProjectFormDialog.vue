@@ -58,7 +58,7 @@ function submit() {
     };
 
     if (props.project) {
-        form.put(update(props.project.id).url, options);
+        form.put(update({ project: props.project.id }).url, options);
     } else {
         form.post(store().url, options);
     }

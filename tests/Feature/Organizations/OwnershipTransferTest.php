@@ -90,7 +90,7 @@ test('personal organizations cannot be transferred', function () {
     $admin = memberOf($personal, OrganizationRole::Admin);
 
     $this->actingAs($owner)
-        ->put(route('organization.transfer'), ['member' => $admin->id, 'password' => 'password'])
+        ->put(route('organization.transfer', $personal), ['member' => $admin->id, 'password' => 'password'])
         ->assertForbidden();
 });
 

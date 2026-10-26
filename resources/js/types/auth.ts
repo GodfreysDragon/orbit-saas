@@ -16,6 +16,8 @@ export type Auth = {
     user: User;
     organization: CurrentOrganization | null;
     organizations: OrganizationSummary[];
+    /** Fills the {organization} segment of tenant links. */
+    organizationSlug: string | null;
 };
 
 export type Passkey = {

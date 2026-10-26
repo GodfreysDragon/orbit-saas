@@ -5,6 +5,7 @@ use App\Enums\OrganizationRole;
 use App\Models\Organization;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 /*
@@ -39,6 +40,9 @@ pest()->extend(TestCase::class)
  * Create an organization (on a trial unless told otherwise) and a user who
  * belongs to it with the given role and has it as their current organization.
  *
+ * The first organization a test creates this way fills the {organization}
+ * segment of route() URLs, as the tenant middleware does during a request.
+ *
  * @return array{0: Organization, 1: User}
  */
 function organizationWithUser(OrganizationRole $role = OrganizationRole::Owner, bool $trial = true): array
@@ -51,15 +55,26 @@ function organizationWithUser(OrganizationRole $role = OrganizationRole::Owner, 
 
     if ($role === OrganizationRole::Owner) {
         $organization = $factory->create();
-
-        return [$organization, $organization->owner];
+        $user = $organization->owner;
+    } else {
+        $user = User::factory()->create();
+        $organization = $factory->withMember($user, $role)->create();
+        $user->switchOrganization($organization);
     }
 
-    $user = User::factory()->create();
-    $organization = $factory->withMember($user, $role)->create();
-    $user->switchOrganization($organization);
+    if (! array_key_exists('organization', URL::getDefaultParameters())) {
+        useOrganizationUrls($organization);
+    }
 
     return [$organization, $user];
+}
+
+/**
+ * Make route() fill the {organization} segment with this organization.
+ */
+function useOrganizationUrls(Organization $organization): void
+{
+    URL::defaults(['organization' => $organization->slug]);
 }
 
 /**

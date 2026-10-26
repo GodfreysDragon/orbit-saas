@@ -3,13 +3,14 @@
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Organizations\AcceptInvitationController;
-use App\Http\Controllers\Organizations\CurrentOrganizationController;
 use App\Http\Controllers\Organizations\InvitationController;
 use App\Http\Controllers\Organizations\MemberController;
 use App\Http\Controllers\Organizations\OrganizationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Middleware\EnsureOrganizationContext;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', WelcomeController::class)->name('home');
@@ -24,37 +25,39 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    // The app's entry point: redirects to the organization the user last worked in.
+    Route::get('dashboard', HomeController::class)->name('dashboard');
+
     // Routes that work without an active organization.
     Route::get('organizations/create', [OrganizationController::class, 'create'])->name('organizations.create');
     Route::post('organizations', [OrganizationController::class, 'store'])->name('organizations.store');
-    Route::put('organizations/{organization}/switch', [CurrentOrganizationController::class, 'update'])->name('organizations.switch');
 
-    // Tenant routes: everything below runs inside the user's current organization.
-    Route::middleware('organization')->group(function () {
-        Route::get('dashboard', DashboardController::class)->name('dashboard');
+    // Tenant routes: the organization is part of the URL, so every browser tab
+    // works in the organization it shows. The middleware is named by class
+    // (not alias) so Wayfinder can read its URL defaults when generating routes.
+    Route::prefix('orgs/{organization}')->middleware(EnsureOrganizationContext::class)->group(function () {
+        Route::get('dashboard', DashboardController::class)->name('organization.dashboard');
 
         Route::resource('projects', ProjectController::class)->only(['index', 'store', 'update', 'destroy']);
 
         Route::get('activity', [ActivityController::class, 'index'])->name('activity.index');
 
-        Route::prefix('organization')->group(function () {
-            Route::get('settings', [OrganizationController::class, 'edit'])->name('organization.edit');
-            Route::patch('settings', [OrganizationController::class, 'update'])->name('organization.update');
-            Route::delete('settings', [OrganizationController::class, 'destroy'])->name('organization.destroy');
-            Route::put('owner', [OrganizationController::class, 'transfer'])
-                ->middleware('throttle:6,1')
-                ->name('organization.transfer');
+        Route::get('settings', [OrganizationController::class, 'edit'])->name('organization.edit');
+        Route::patch('settings', [OrganizationController::class, 'update'])->name('organization.update');
+        Route::delete('settings', [OrganizationController::class, 'destroy'])->name('organization.destroy');
+        Route::put('owner', [OrganizationController::class, 'transfer'])
+            ->middleware('throttle:6,1')
+            ->name('organization.transfer');
 
-            Route::get('members', [MemberController::class, 'index'])->name('members.index');
-            Route::patch('members/{member}', [MemberController::class, 'update'])->name('members.update');
-            Route::delete('members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
+        Route::get('members', [MemberController::class, 'index'])->name('members.index');
+        Route::patch('members/{member}', [MemberController::class, 'update'])->name('members.update');
+        Route::delete('members/{member}', [MemberController::class, 'destroy'])->name('members.destroy');
 
-            Route::post('invitations', [InvitationController::class, 'store'])
-                ->middleware('throttle:20,1')
-                ->name('organization.invitations.store');
-            Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy'])
-                ->name('organization.invitations.destroy');
-        });
+        Route::post('invitations', [InvitationController::class, 'store'])
+            ->middleware('throttle:20,1')
+            ->name('organization.invitations.store');
+        Route::delete('invitations/{invitation}', [InvitationController::class, 'destroy'])
+            ->name('organization.invitations.destroy');
 
         Route::prefix('billing')->name('billing.')->group(function () {
             Route::get('/', [BillingController::class, 'index'])->name('index');

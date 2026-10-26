@@ -12,7 +12,7 @@ test('members can visit the dashboard of their current organization', function (
     [$organization, $user] = organizationWithUser();
 
     $this->actingAs($user)
-        ->get(route('dashboard'))
+        ->get(route('organization.dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Dashboard')
@@ -29,7 +29,7 @@ test('the dashboard loads its deferred activity props', function () {
     $this->actingAs($user)->post(route('projects.store'), ['name' => 'Tracked']);
 
     $this->actingAs($user)
-        ->get(route('dashboard'))
+        ->get(route('organization.dashboard'))
         ->assertInertia(fn (Assert $page) => $page
             ->missing('activityTrend')
             ->loadDeferredProps(fn (Assert $reload) => $reload
@@ -42,7 +42,7 @@ test('roles without activity access get no activity props', function () {
     [, $viewer] = organizationWithUser(OrganizationRole::Viewer);
 
     $this->actingAs($viewer)
-        ->get(route('dashboard'))
+        ->get(route('organization.dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->where('activityTrend', null)
@@ -62,6 +62,6 @@ test('page guides follow the app.page_guides setting', function (bool $enabled) 
     [, $user] = organizationWithUser();
 
     $this->actingAs($user)
-        ->get(route('dashboard'))
+        ->get(route('organization.dashboard'))
         ->assertInertia(fn (Assert $page) => $page->where('pageGuides', $enabled));
 })->with([true, false]);

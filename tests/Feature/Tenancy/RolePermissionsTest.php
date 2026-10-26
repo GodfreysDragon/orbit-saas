@@ -51,7 +51,7 @@ test('shared props expose the permissions of the current role', function () {
     [, $member] = organizationWithUser(OrganizationRole::Member);
 
     $this->actingAs($member)
-        ->get(route('dashboard'))
+        ->get(route('organization.dashboard'))
         ->assertInertia(fn ($page) => $page
             ->where('auth.organization.permissions', fn ($permissions) => collect($permissions)->contains('projects.create')
                 && ! collect($permissions)->contains('billing.manage')));

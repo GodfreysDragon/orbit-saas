@@ -81,7 +81,7 @@ test('invitees can accept and join with the invited role', function () {
 
     $this->actingAs($invitee)
         ->post(route('invitations.accept', $invitation->plainToken))
-        ->assertRedirect(route('dashboard'));
+        ->assertRedirect(route('organization.dashboard'));
 
     expect($organization->hasUser($invitee))->toBeTrue()
         ->and($invitee->roleIn($organization))->toBe(OrganizationRole::Admin)
@@ -122,7 +122,7 @@ test('accepting an invitation verifies the invited email address', function () {
 
     $this->actingAs($invitee)
         ->post(route('invitations.accept', $invitation->plainToken))
-        ->assertRedirect(route('dashboard'));
+        ->assertRedirect(route('organization.dashboard'));
 
     expect($invitee->fresh()->hasVerifiedEmail())->toBeTrue()
         ->and($organization->hasUser($invitee))->toBeTrue();

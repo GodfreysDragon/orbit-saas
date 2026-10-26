@@ -21,12 +21,13 @@ about a minute.
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (151 tests, 8 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
+| Quality  | Pest (154 tests, 9 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
 
 ## Features
 
 - **Organizations**: every user gets a personal workspace on sign-up and can create or join more.
-  An organization switcher in the sidebar changes the active tenant.
+  The organization is part of the URL (`/orgs/acme/projects`), so each browser tab works in its
+  own organization, and the sidebar switcher moves between them.
 - **Tenant isolation**: tenant-owned models use a `BelongsToOrganization` trait that adds a global
   scope and stamps `organization_id` on create. Route model binding runs _after_ the tenant is
   resolved, so another tenant's records return 404.
@@ -91,12 +92,16 @@ app/
 
 ### How a request is scoped
 
-1. `auth` and `verified` run, then the `organization` middleware (`EnsureOrganizationContext`)
-   resolves the user's current organization. If it is stale, the user falls back to another
-   membership. If they have none, they are redirected to create an organization.
+1. Tenant routes live under `/orgs/{organization}`. `auth` and `verified` run, then
+   `EnsureOrganizationContext` resolves the organization from the slug in the URL. Users who
+   don't belong to it get a 404. The organization is remembered as the user's current one, and
+   `/dashboard` (where login lands) sends them back to it, falling back to another membership if
+   it is gone, or to creating an organization if they have none.
 2. It stores the tenant in `CurrentOrganization` (a scoped singleton) and calls
    `setPermissionsTeamId()`, so every `can()` and `hasRole()` check is evaluated inside that
-   organization.
+   organization. It also sets `URL::defaults()`, so `route('projects.index')` stays in the
+   request's organization. On the client, Wayfinder's `setUrlDefaults()` does the same for typed
+   routes, using the page's organization.
 3. Route model binding (`{project}`) runs next. The middleware priority list puts the tenant
    middleware before `SubstituteBindings`, so bindings are already tenant-filtered.
 4. Controllers authorize through policies, which check permissions _and_ plan limits, e.g.

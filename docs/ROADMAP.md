@@ -32,6 +32,8 @@ architecture are in the [README](../README.md).
 - [x] Record each Stripe webhook event once in the audit log, even when Stripe delivers it again.
 - [x] Check seat and project limits under a lock on the organization, in the same transaction as
       the insert (SQLite transactions are `IMMEDIATE`, so they serialize too).
+- [x] Put the organization in the URL (`/orgs/{slug}/...`), so each browser tab works in its own
+      organization instead of sharing one stored on the user.
 
 ## Later
 

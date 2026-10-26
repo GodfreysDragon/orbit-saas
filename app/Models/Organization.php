@@ -46,6 +46,14 @@ class Organization extends Model
     }
 
     /**
+     * Tenant URLs carry the slug: /orgs/{slug}/...
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'slug';
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

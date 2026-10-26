@@ -236,8 +236,8 @@ the events from `php artisan cashier:webhook`, and set its signing secret as `ST
 
 ## Roadmap
 
-Known limitations and planned work (failed-payment handling, ownership transfer, tenant-aware
-queued jobs, browser tests and more) are tracked in [docs/ROADMAP.md](docs/ROADMAP.md).
+Known limitations, finished work and planned features (per-seat and metered billing, API tokens,
+activity log filters and more) are tracked in [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## License
 

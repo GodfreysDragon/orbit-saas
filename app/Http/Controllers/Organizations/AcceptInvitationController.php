@@ -80,8 +80,8 @@ class AcceptInvitationController extends Controller
 
     private function findInvitation(string $token): OrganizationInvitation
     {
-        return OrganizationInvitation::with('organization', 'inviter')
-            ->where('token', $token)
+        return OrganizationInvitation::whereToken($token)
+            ->with('organization', 'inviter')
             ->firstOrFail();
     }
 }

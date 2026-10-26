@@ -3,6 +3,7 @@
 use App\Enums\OrganizationRole;
 use App\Models\OrganizationInvitation;
 use App\Models\User;
+use App\Notifications\OrganizationInvitationNotification;
 use Illuminate\Support\Facades\Notification;
 
 test('an owner invites a teammate who signs up from the link and joins', function () {
@@ -27,7 +28,18 @@ test('an owner invites a teammate who signs up from the link and joins', functio
 
     expect($invitation->role)->toBe(OrganizationRole::Member);
 
-    visit(route('invitations.show', $invitation->token, absolute: false))
+    // Only the token's hash is stored; the link comes from the email.
+    $token = null;
+    Notification::assertSentOnDemand(
+        OrganizationInvitationNotification::class,
+        function (OrganizationInvitationNotification $notification) use (&$token) {
+            $token = $notification->token;
+
+            return true;
+        },
+    );
+
+    visit(route('invitations.show', $token, absolute: false))
         ->assertSee('Acme Inc')
         ->click('@invitation-register')
         ->assertValue('#email', 'new.hire@example.org')

@@ -19,18 +19,22 @@ class InviteMember
      */
     public function handle(Organization $organization, User $inviter, string $email, OrganizationRole $role): OrganizationInvitation
     {
+        // A new token on every invite, so re-inviting invalidates the old link.
+        $token = OrganizationInvitation::newToken();
+
         $invitation = $organization->invitations()->updateOrCreate(
             ['email' => Str::lower($email)],
             [
                 'role' => $role,
                 'invited_by_id' => $inviter->getKey(),
-                'token' => Str::random(64),
+                'token' => OrganizationInvitation::hashToken($token),
                 'expires_at' => now()->addDays(7),
             ],
         );
+        $invitation->plainToken = $token;
 
         Notification::route('mail', $invitation->email)
-            ->notify(new OrganizationInvitationNotification($invitation));
+            ->notify(new OrganizationInvitationNotification($invitation, $token));
 
         Activity::record(
             'member.invited',

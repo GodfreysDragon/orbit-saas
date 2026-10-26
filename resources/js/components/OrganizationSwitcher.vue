@@ -17,7 +17,8 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { initials } from '@/lib/format';
-import { create, switchMethod } from '@/routes/organizations';
+import { dashboard } from '@/routes/organization';
+import { create } from '@/routes/organizations';
 import type { OrganizationSummary } from '@/types';
 
 const page = usePage();
@@ -31,7 +32,8 @@ function switchTo(organization: OrganizationSummary) {
         return;
     }
 
-    router.put(switchMethod(organization.id).url, {}, { preserveState: false });
+    // The organization is in the URL, so switching only changes this tab.
+    router.visit(dashboard(organization.slug));
 }
 </script>
 

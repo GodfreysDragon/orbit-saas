@@ -62,7 +62,7 @@ class AcceptInvitationController extends Controller
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Welcome to :name!', ['name' => $organization->name])]);
 
-        return to_route('dashboard');
+        return to_route('organization.dashboard', $organization);
     }
 
     public function destroy(Request $request, string $token): RedirectResponse

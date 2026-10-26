@@ -53,33 +53,61 @@ test('new projects are stamped with the current organization', function () {
         ->and($project->created_by_id)->toBe($user->id);
 });
 
-test('switching organizations changes which data is visible', function () {
+test('each organization is served at its own URL, so tabs don\'t interfere', function () {
     [$first, $user] = organizationWithUser();
     $second = Organization::factory()->withMember($user, OrganizationRole::Member)->create();
 
+    Project::factory()->for($first)->create(['name' => 'First org project']);
     Project::factory()->for($second)->create(['name' => 'Second org project']);
 
+    // One tab works in the second organization...
     $this->actingAs($user)
-        ->put(route('organizations.switch', $second))
-        ->assertRedirect(route('dashboard'));
+        ->get(route('projects.index', $second))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.organization.id', $second->id)
+            ->where('auth.organization.role.value', 'member')
+            ->where('auth.organizationSlug', $second->slug)
+            ->where('projects.data.0.name', 'Second org project'));
+
+    // ...while another tab keeps showing the first.
+    $this->actingAs($user)
+        ->get(route('projects.index', $first))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.organization.id', $first->id)
+            ->where('auth.organization.role.value', 'owner')
+            ->where('projects.data.0.name', 'First org project'));
+});
+
+test('links generated during a request stay in its organization', function () {
+    [, $user] = organizationWithUser();
+    $second = Organization::factory()->withMember($user, OrganizationRole::Member)->create();
+
+    $this->actingAs($user)
+        ->post(route('projects.store', $second), ['name' => 'Launch'])
+        ->assertRedirect(route('projects.index', $second));
+
+    expect($second->projects()->sole()->name)->toBe('Launch');
+});
+
+test('organizations the user does not belong to are not found', function () {
+    [, $user] = organizationWithUser();
+    $foreign = Organization::factory()->create();
+
+    $this->actingAs($user)->get(route('projects.index', $foreign))->assertNotFound();
+    $this->actingAs($user)->get('/orgs/no-such-organization/projects')->assertNotFound();
+});
+
+test('the dashboard entry point opens the organization the user last worked in', function () {
+    [$first, $user] = organizationWithUser();
+    $second = Organization::factory()->withMember($user, OrganizationRole::Member)->create();
+
+    $this->actingAs($user)->get(route('organization.dashboard', $second))->assertOk();
 
     expect($user->fresh()->current_organization_id)->toBe($second->id);
 
     $this->actingAs($user->fresh())
-        ->get(route('projects.index'))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('auth.organization.id', $second->id)
-            ->where('auth.organization.role.value', 'member')
-            ->where('projects.data.0.name', 'Second org project'));
-});
-
-test('users cannot switch to an organization they do not belong to', function () {
-    [, $user] = organizationWithUser();
-    $foreign = Organization::factory()->create();
-
-    $this->actingAs($user)
-        ->put(route('organizations.switch', $foreign))
-        ->assertForbidden();
+        ->get(route('dashboard'))
+        ->assertRedirect(route('organization.dashboard', $second));
 });
 
 test('a stale current organization falls back to one the user belongs to', function () {
@@ -88,7 +116,9 @@ test('a stale current organization falls back to one the user belongs to', funct
 
     $user->forceFill(['current_organization_id' => $foreign->id])->save();
 
-    $this->actingAs($user->fresh())->get(route('dashboard'))->assertOk();
+    $this->actingAs($user->fresh())
+        ->get(route('dashboard'))
+        ->assertRedirect(route('organization.dashboard', $organization));
 
     expect($user->fresh()->current_organization_id)->toBe($organization->id);
 });

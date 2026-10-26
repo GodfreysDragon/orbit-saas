@@ -27,7 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import UsageMeter from '@/components/UsageMeter.vue';
 import { usePermissions } from '@/composables/usePermissions';
 import { daysUntil, formatDate, timeAgo } from '@/lib/format';
-import { dashboard } from '@/routes';
+import { dashboard } from '@/routes/organization';
 import { index as activityIndex } from '@/routes/activity';
 import { index as billingIndex } from '@/routes/billing';
 import { index as membersIndex } from '@/routes/members';

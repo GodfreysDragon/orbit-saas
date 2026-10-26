@@ -96,7 +96,7 @@ function confirmDelete(project: Project) {
 function performDelete() {
     if (!deleting.value) return;
 
-    router.delete(destroy(deleting.value.id).url, {
+    router.delete(destroy({ project: deleting.value.id }).url, {
         preserveScroll: true,
         onStart: () => (deleteProcessing.value = true),
         onFinish: () => {

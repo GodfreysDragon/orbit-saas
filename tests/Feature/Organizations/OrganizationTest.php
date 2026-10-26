@@ -27,7 +27,7 @@ test('users can create additional organizations', function () {
 
     $this->actingAs($user)
         ->post(route('organizations.store'), ['name' => 'Second Co'])
-        ->assertRedirect(route('dashboard'));
+        ->assertRedirect(route('organization.dashboard', 'second-co'));
 
     $organization = Organization::firstWhere('name', 'Second Co');
 
@@ -76,10 +76,10 @@ test('owners can delete an organization after confirming their password', functi
 
 test('personal organizations cannot be deleted', function () {
     $owner = User::factory()->create();
-    Organization::factory()->personal()->create(['owner_id' => $owner->id]);
+    $personal = Organization::factory()->personal()->create(['owner_id' => $owner->id]);
 
     $this->actingAs($owner->fresh())
-        ->delete(route('organization.destroy'), ['password' => 'password'])
+        ->delete(route('organization.destroy', $personal), ['password' => 'password'])
         ->assertForbidden();
 });
 

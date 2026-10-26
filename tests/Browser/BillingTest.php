@@ -17,7 +17,7 @@ test('the billing page shows the trial and switches between monthly and yearly p
 
     $this->actingAs($owner);
 
-    visit('/billing')
+    visit(route('billing.index', absolute: false))
         ->assertSee('Your trial ends on')
         ->assertSeeIn('@choose-pro', 'Upgrade to Pro')
         ->assertSee('$29')
@@ -34,7 +34,7 @@ test('without Stripe keys the page explains why plans cannot be bought', functio
 
     $this->actingAs($owner);
 
-    visit('/billing')
+    visit(route('billing.index', absolute: false))
         ->assertSee('Stripe is not configured')
         ->assertAttribute('@choose-pro', 'disabled', '');
 });
@@ -44,9 +44,9 @@ test('members without billing access do not see the billing page in the sidebar'
 
     $this->actingAs($member);
 
-    visit('/dashboard')
+    visit(route('organization.dashboard', absolute: false))
         ->assertDontSeeIn('[data-sidebar=sidebar]', 'Billing')
-        ->navigate('/billing')
+        ->navigate(route('billing.index', absolute: false))
         ->assertSee('403');
 });
 
@@ -62,12 +62,12 @@ test('a failed renewal shows a banner that only billing managers can act on', fu
     $viewer = memberOf($organization, OrganizationRole::Viewer);
 
     $this->actingAs($owner);
-    visit('/projects')
+    visit(route('projects.index', absolute: false))
         ->assertSeeIn('@past-due-banner', 'Your last payment failed.')
         ->assertSeeIn('@past-due-banner', 'Update payment method');
 
     $this->actingAs($viewer);
-    visit('/projects')
+    visit(route('projects.index', absolute: false))
         ->assertSeeIn('@past-due-banner', "Ask the organization's owner")
         ->assertDontSeeIn('@past-due-banner', 'Update payment method');
 });
@@ -77,5 +77,5 @@ test('organizations without a subscription show no banner', function () {
 
     $this->actingAs($owner);
 
-    visit('/projects')->assertNotPresent('@past-due-banner');
+    visit(route('projects.index', absolute: false))->assertNotPresent('@past-due-banner');
 });

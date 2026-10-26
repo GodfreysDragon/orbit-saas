@@ -27,11 +27,11 @@ class OrganizationController extends Controller
 
     public function store(OrganizationRequest $request, CreateOrganization $createOrganization): RedirectResponse
     {
-        $createOrganization->handle($request->user(), $request->validated('name'));
+        $organization = $createOrganization->handle($request->user(), $request->validated('name'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Organization created.')]);
 
-        return to_route('dashboard');
+        return to_route('organization.dashboard', $organization);
     }
 
     public function edit(Request $request, CurrentOrganization $current): Response

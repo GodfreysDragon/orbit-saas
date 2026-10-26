@@ -51,6 +51,11 @@ class HandleInertiaRequests extends Middleware
                     ->orderBy('name')
                     ->get(['organizations.id', 'name', 'slug', 'personal'])
                     ->map->only('id', 'name', 'slug', 'personal'),
+                // Fills the {organization} segment of tenant links (Wayfinder URL
+                // defaults): the page's organization, or on pages outside one
+                // (e.g. profile settings) the one the user last worked in.
+                'organizationSlug' => fn () => app(CurrentOrganization::class)->get()->slug
+                    ?? $request->user()?->currentOrganization?->slug,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'pageGuides' => config('app.page_guides'),

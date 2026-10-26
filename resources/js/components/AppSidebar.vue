@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import {
     Code,
     CreditCard,
@@ -21,7 +22,7 @@ import {
     SidebarHeader,
 } from '@/components/ui/sidebar';
 import { usePermissions } from '@/composables/usePermissions';
-import { dashboard } from '@/routes';
+import { dashboardLink } from '@/lib/organizationLinks';
 import { index as activity } from '@/routes/activity';
 import { index as billing } from '@/routes/billing';
 import { index as members } from '@/routes/members';
@@ -30,6 +31,10 @@ import { index as projects } from '@/routes/projects';
 import type { NavItem } from '@/types';
 
 const { can } = usePermissions();
+const page = usePage();
+
+// Users without any organization (about to create one) have no tenant links.
+const hasOrganization = computed(() => !!page.props.auth.organizationSlug);
 
 type GuardedNavItem = NavItem & { visible?: boolean };
 
@@ -38,7 +43,7 @@ const visibleItems = (items: GuardedNavItem[]): NavItem[] =>
 
 const mainNavItems = computed(() =>
     visibleItems([
-        { title: 'Dashboard', href: dashboard(), icon: LayoutGrid },
+        { title: 'Dashboard', href: dashboardLink(), icon: LayoutGrid },
         {
             title: 'Projects',
             href: projects(),
@@ -68,7 +73,12 @@ const organizationNavItems = computed(() =>
             icon: CreditCard,
             visible: can('billing.manage'),
         },
-        { title: 'Settings', href: organizationSettings(), icon: Settings2 },
+        {
+            title: 'Settings',
+            href: organizationSettings(),
+            icon: Settings2,
+            visible: hasOrganization.value,
+        },
     ]),
 );
 

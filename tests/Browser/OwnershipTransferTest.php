@@ -9,7 +9,7 @@ test('the owner hands the organization to an admin from the settings page', func
 
     $this->actingAs($owner);
 
-    visit('/organization/settings')
+    visit(route('organization.edit', absolute: false))
         ->click('#transfer-member')
         ->click('[role=option]')
         ->assertSeeIn('#transfer-member', 'Ada Admin')

@@ -84,11 +84,15 @@ function invite() {
 function changeRole(member: Member, role: unknown) {
     if (typeof role !== 'string' || role === member.role?.value) return;
 
-    router.patch(update(member.id).url, { role }, { preserveScroll: true });
+    router.patch(
+        update({ member: member.id }).url,
+        { role },
+        { preserveScroll: true },
+    );
 }
 
 function revoke(invitation: Invitation) {
-    router.delete(revokeInvitation(invitation.id).url, {
+    router.delete(revokeInvitation({ invitation: invitation.id }).url, {
         preserveScroll: true,
     });
 }
@@ -105,7 +109,7 @@ function confirmRemove(member: Member) {
 function performRemove() {
     if (!removing.value) return;
 
-    router.delete(destroy(removing.value.id).url, {
+    router.delete(destroy({ member: removing.value.id }).url, {
         preserveScroll: true,
         onStart: () => (removeProcessing.value = true),
         onFinish: () => {

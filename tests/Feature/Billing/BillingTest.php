@@ -142,7 +142,7 @@ test('past due subscriptions keep the paid plan while Stripe retries the payment
     expect($organization->fresh()->plan()->key)->toBe('pro');
 
     $this->actingAs($owner)
-        ->get(route('dashboard'))
+        ->get(route('organization.dashboard'))
         ->assertInertia(fn ($page) => $page
             ->where('auth.organization.billingStatus', 'past_due')
             ->where('auth.organization.plan.key', 'pro'));

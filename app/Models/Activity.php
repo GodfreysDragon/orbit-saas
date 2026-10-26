@@ -22,9 +22,10 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property int|null $subject_id
  * @property string $description
  * @property array<string, mixed>|null $properties
+ * @property string|null $idempotency_key
  * @property CarbonImmutable $created_at
  */
-#[Fillable(['organization_id', 'causer_id', 'event', 'subject_type', 'subject_id', 'description', 'properties', 'created_at'])]
+#[Fillable(['organization_id', 'causer_id', 'event', 'subject_type', 'subject_id', 'description', 'properties', 'idempotency_key', 'created_at'])]
 #[WithoutTimestamps]
 class Activity extends Model
 {
@@ -63,6 +64,9 @@ class Activity extends Model
      * Record an activity. Falls back to the current tenant and the
      * authenticated user when they are not given explicitly.
      *
+     * An activity with an idempotency key (e.g. a Stripe event id) is
+     * recorded once: recording the same key again returns the first entry.
+     *
      * @param  array<string, mixed>  $properties
      */
     public static function record(
@@ -72,6 +76,7 @@ class Activity extends Model
         array $properties = [],
         ?Organization $organization = null,
         ?User $causer = null,
+        ?string $idempotencyKey = null,
     ): ?self {
         $organizationId = $organization?->getKey() ?? app(CurrentOrganization::class)->id();
 
@@ -79,7 +84,7 @@ class Activity extends Model
             return null;
         }
 
-        return static::create([
+        $attributes = [
             'organization_id' => $organizationId,
             'causer_id' => $causer?->getKey() ?? auth()->id(),
             'event' => $event,
@@ -88,6 +93,14 @@ class Activity extends Model
             'description' => $description,
             'properties' => $properties ?: null,
             'created_at' => now(),
-        ]);
+        ];
+
+        if ($idempotencyKey === null) {
+            return static::create($attributes);
+        }
+
+        // The unique index decides between concurrent attempts. The lookup
+        // after a conflict must not depend on the current tenant.
+        return static::query()->acrossOrganizations()->createOrFirst(['idempotency_key' => $idempotencyKey], $attributes);
     }
 }

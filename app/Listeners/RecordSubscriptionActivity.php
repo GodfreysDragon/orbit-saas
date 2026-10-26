@@ -44,7 +44,10 @@ class RecordSubscriptionActivity implements ShouldQueue
         }
 
         $plan = Plan::findByStripePrice($object['items']['data'][0]['price']['id'] ?? null);
+        $eventId = $event->payload['id'] ?? null;
 
+        // Stripe delivers events at least once, so a retried delivery
+        // carries the same event id and is recorded only once.
         Activity::record(
             str_replace('customer.', 'billing.', $type),
             strtr($description, [
@@ -53,6 +56,7 @@ class RecordSubscriptionActivity implements ShouldQueue
             ]),
             properties: ['stripe_subscription' => $object['id'] ?? null],
             organization: $organization,
+            idempotencyKey: is_string($eventId) ? "stripe:{$eventId}" : null,
         );
     }
 }

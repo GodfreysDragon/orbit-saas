@@ -21,7 +21,7 @@ about a minute.
 | -------- | -------------------------------------------------------------------------- |
 | Backend  | Laravel 13, PHP 8.3+, Fortify, Cashier (Stripe), spatie/laravel-permission |
 | Frontend | Vue 3 + TypeScript, Inertia 3, Tailwind 4, shadcn-vue (reka-ui), Wayfinder |
-| Quality  | Pest (144 tests, 8 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
+| Quality  | Pest (146 tests, 8 in a browser), Larastan level 7, Pint, vue-tsc, oxlint  |
 
 ## Features
 

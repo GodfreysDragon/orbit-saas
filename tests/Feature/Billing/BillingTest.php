@@ -5,6 +5,7 @@ use App\Listeners\RecordSubscriptionActivity;
 use App\Models\Activity;
 use App\Models\Organization;
 use App\Models\Project;
+use App\Support\CurrentOrganization;
 use Laravel\Cashier\Events\WebhookHandled;
 
 /**
@@ -173,4 +174,43 @@ test('a failed renewal is recorded in the activity log', function () {
 
     expect(Activity::withoutGlobalScopes()->where('organization_id', $organization->id)->sole()->description)
         ->toBe('Payment failed: the Pro plan is past due');
+});
+
+test('a webhook that Stripe delivers twice is recorded once', function () {
+    $organization = Organization::factory()->create(['stripe_id' => 'cus_789']);
+    $webhook = fn (string $eventId) => new WebhookHandled([
+        'id' => $eventId,
+        'type' => 'customer.subscription.created',
+        'data' => ['object' => [
+            'id' => 'sub_789',
+            'customer' => 'cus_789',
+            'status' => 'active',
+            'items' => ['data' => [['price' => ['id' => 'price_pro_monthly']]]],
+        ]],
+    ]);
+
+    $listener = new RecordSubscriptionActivity;
+    $listener->handle($webhook('evt_1'));
+    $listener->handle($webhook('evt_1'));
+
+    expect($organization->activities()->count())->toBe(1)
+        ->and($organization->activities()->sole()->idempotency_key)->toBe('stripe:evt_1');
+
+    $listener->handle($webhook('evt_2'));
+
+    expect($organization->activities()->count())->toBe(2);
+});
+
+test('recording an idempotency key again returns the first entry whichever tenant is current', function () {
+    $organization = Organization::factory()->create();
+    $first = Activity::record('test.event', 'First', organization: $organization, idempotencyKey: 'key-1');
+
+    $again = app(CurrentOrganization::class)->runAs(
+        Organization::factory()->create(),
+        fn () => Activity::record('test.event', 'Second', organization: $organization, idempotencyKey: 'key-1'),
+    );
+
+    expect($again?->is($first))->toBeTrue()
+        ->and($again?->description)->toBe('First')
+        ->and($organization->activities()->count())->toBe(1);
 });
